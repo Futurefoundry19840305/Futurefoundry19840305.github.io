@@ -1,0 +1,1116 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SIMPLE — 海と、街と、暮らしと。</title>
+<meta name="description" content="海と、街と、暮らしと。ちいさな手仕事を、未来へつなぐ会社、SIMPLE のコーポレートサイト。" />
+<meta property="og:title" content="SIMPLE — 海と、街と、暮らしと。" />
+<meta property="og:description" content="ちいさな手仕事を、未来へつなぐ会社、SIMPLE のコーポレートサイト。" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="assets/beach.png" />
+<link rel="preconnect" href="https://unpkg.com" />
+<style>
+  :root {
+    --ink: #111;
+    --jp: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+    --en: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--jp);
+    color: var(--ink);
+    background: #fff;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    width: 1440px;
+    margin: 0 auto;
+    transform-origin: top center;
+  }
+
+  .stage {
+    width: 1440px;
+    height: 900px;
+    position: relative;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.25);
+  }
+
+  .bg {
+    position: absolute;
+    inset: 0;
+    background-image: url("assets/beach.png");
+    background-size: cover;
+    background-position: right center;
+    z-index: 0;
+  }
+
+  .mask-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .nav {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 36px 56px 0;
+  }
+  .menu {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .menu a {
+    font-family: var(--jp);
+    font-size: 14px;
+    color: #111;
+    text-decoration: none;
+    letter-spacing: 0.12em;
+    position: relative;
+    padding: 6px 0;
+    transition: color 0.2s ease;
+  }
+  .menu a::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right center;
+    transition: transform 0.35s cubic-bezier(0.7, 0, 0.2, 1);
+  }
+  .menu a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+
+  .meta {
+    position: absolute;
+    top: 50%;
+    right: 56px;
+    transform: translateY(-50%);
+    z-index: 4;
+    text-align: right;
+    color: #111;
+    font-family: var(--jp);
+    max-width: 360px;
+  }
+  .eyebrow {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: #888;
+    margin-bottom: 22px;
+  }
+  .meta h2 {
+    font-family: var(--jp);
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 1.7;
+    margin: 0 0 24px;
+    letter-spacing: 0.06em;
+    color: #111;
+  }
+  .meta p {
+    font-size: 13px;
+    line-height: 1.9;
+    color: #555;
+    margin: 0 0 32px;
+    letter-spacing: 0.05em;
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--en);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: #111;
+    text-decoration: none;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #111;
+  }
+  .cta .arrow { display: inline-block; transition: transform 0.3s ease; }
+  .cta:hover .arrow { transform: translateX(6px); }
+
+  .scroll {
+    position: absolute;
+    right: 36px;
+    bottom: 32px;
+    z-index: 4;
+    writing-mode: vertical-rl;
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: #111;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .scroll::after {
+    content: "";
+    width: 1px;
+    height: 60px;
+    background: #111;
+    animation: scrollLine 2.4s ease-in-out infinite;
+    transform-origin: top center;
+  }
+  @keyframes scrollLine {
+    0%   { transform: scaleY(0); transform-origin: top center; }
+    50%  { transform: scaleY(1); transform-origin: top center; }
+    50.1%{ transform: scaleY(1); transform-origin: bottom center; }
+    100% { transform: scaleY(0); transform-origin: bottom center; }
+  }
+
+  .gallery {
+    width: 1440px;
+    background: #fff;
+    padding: 140px 96px 160px;
+  }
+  .gallery-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 80px;
+    gap: 40px;
+  }
+  .gallery-eyebrow {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .gallery-title {
+    font-family: var(--jp);
+    font-weight: 500;
+    font-size: 36px;
+    letter-spacing: 0.08em;
+    margin: 0;
+    line-height: 1.4;
+    color: #111;
+  }
+  .gallery-lede {
+    font-family: var(--jp);
+    font-size: 13px;
+    line-height: 2;
+    color: #555;
+    max-width: 320px;
+    text-align: right;
+    letter-spacing: 0.05em;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 40px;
+    align-items: end;
+  }
+  .gallery-item { display: flex; flex-direction: column; }
+  .gallery-item .frame {
+    width: 100%;
+    overflow: hidden;
+    background: #f4f2ee;
+    margin-bottom: 24px;
+  }
+  .gallery-item .frame img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .gallery-item.tall  .frame { aspect-ratio: 3 / 4; }
+  .gallery-item.wide  .frame { aspect-ratio: 4 / 5; align-self: stretch; }
+  .gallery-item.land  .frame { aspect-ratio: 4 / 5; }
+  .gallery-item.offset-up   { margin-top: -60px; }
+  .gallery-item.offset-down { margin-top: 60px; }
+  .gallery-item .num {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: #888;
+    margin-bottom: 10px;
+  }
+  .gallery-item h3 {
+    font-family: var(--jp);
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    margin: 0 0 12px;
+    color: #111;
+  }
+  .gallery-item p {
+    font-family: var(--jp);
+    font-size: 13px;
+    line-height: 1.9;
+    color: #555;
+    margin: 0;
+    letter-spacing: 0.04em;
+  }
+
+  .work {
+    width: 1440px;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    min-height: 720px;
+  }
+  .work-img {
+    background-image: url("assets/fisherman.png");
+    background-size: cover;
+    background-position: center;
+    min-height: 360px;
+  }
+  .work-body {
+    padding: 120px 96px 120px 88px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .work-eyebrow {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: #888;
+    margin-bottom: 28px;
+  }
+  .work-title {
+    font-family: var(--jp);
+    font-weight: 500;
+    font-size: 40px;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    color: #111;
+    margin: 0 0 40px;
+  }
+  .work-title .accent {
+    display: inline-block;
+    border-bottom: 2px solid #111;
+    padding-bottom: 4px;
+  }
+  .work-body p {
+    font-family: var(--jp);
+    font-size: 14px;
+    line-height: 2.1;
+    color: #444;
+    letter-spacing: 0.05em;
+    margin: 0 0 22px;
+    max-width: 480px;
+  }
+  .work-list {
+    margin-top: 40px;
+    border-top: 1px solid rgba(17,17,17,0.15);
+    padding-top: 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 32px;
+    max-width: 480px;
+  }
+  .work-list-item {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+  }
+  .work-list-item .n {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: #888;
+    flex-shrink: 0;
+    min-width: 28px;
+  }
+  .work-list-item .t {
+    font-family: var(--jp);
+    font-size: 14px;
+    color: #111;
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+  }
+  .work-cta {
+    margin-top: 56px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--en);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: #111;
+    text-decoration: none;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #111;
+    align-self: flex-start;
+  }
+  .work-cta .arrow { display: inline-block; transition: transform 0.3s ease; }
+  .work-cta:hover .arrow { transform: translateX(6px); }
+
+  .house {
+    width: 1440px;
+    background: #fff;
+    padding: 160px 96px 180px;
+    position: relative;
+  }
+  .house-eyebrow {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: #888;
+    margin-bottom: 24px;
+  }
+  .house-title {
+    font-family: var(--jp);
+    font-weight: 400;
+    font-size: 44px;
+    line-height: 1.5;
+    letter-spacing: 0.08em;
+    margin: 0;
+    color: #111;
+  }
+  .house-title em {
+    font-style: normal;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 3px;
+  }
+  .house-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    column-gap: 80px;
+    align-items: start;
+  }
+  .house-main {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #f4f2ee;
+  }
+  .house-main img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .house-meta {
+    margin-top: 28px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: #888;
+  }
+  .house-meta .label { color: #111; letter-spacing: 0.4em; }
+  .house-right { padding-top: 60px; }
+  .house-right p {
+    font-family: var(--jp);
+    font-size: 14px;
+    line-height: 2.2;
+    color: #444;
+    letter-spacing: 0.06em;
+    margin: 0 0 22px;
+    max-width: 460px;
+  }
+  .house-accent {
+    margin-top: 56px;
+    width: 80%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: #f4f2ee;
+    margin-left: auto;
+  }
+  .house-accent img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .house-accent-cap {
+    margin-top: 16px;
+    width: 80%;
+    margin-left: auto;
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .life {
+    width: 1440px;
+    background: #fff;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    min-height: 760px;
+  }
+  .life-body {
+    padding: 140px 88px 140px 96px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .life-eyebrow {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: #888;
+    margin-bottom: 28px;
+  }
+  .life-title {
+    font-family: var(--jp);
+    font-weight: 500;
+    font-size: 38px;
+    line-height: 1.55;
+    letter-spacing: 0.08em;
+    color: #111;
+    margin: 0 0 56px;
+    max-width: 520px;
+  }
+  .life-title em {
+    font-style: normal;
+    border-bottom: 2px solid #111;
+    padding-bottom: 4px;
+  }
+  .life-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+    max-width: 540px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .life-list li {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 24px;
+    padding: 22px 0 26px;
+    border-top: 1px solid rgba(17,17,17,0.15);
+    align-items: baseline;
+  }
+  .life-list li:last-child { border-bottom: 1px solid rgba(17,17,17,0.15); }
+  .life-list .n {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: #888;
+  }
+  .life-list .head {
+    font-family: var(--jp);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: #111;
+    margin: 0 0 8px;
+  }
+  .life-list .desc {
+    font-family: var(--jp);
+    font-size: 13px;
+    line-height: 1.9;
+    color: #555;
+    letter-spacing: 0.04em;
+    margin: 0;
+  }
+  .life-img {
+    background-image: url("assets/sunset.png");
+    background-size: cover;
+    background-position: center;
+    min-height: 360px;
+  }
+
+  .contact {
+    width: 1440px;
+    background: #fff;
+    padding: 180px 96px 160px;
+    text-align: center;
+  }
+  .contact-eyebrow {
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.5em;
+    color: #888;
+    margin-bottom: 36px;
+  }
+  .contact-title {
+    font-family: var(--en);
+    font-weight: 300;
+    font-size: 96px;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    color: #111;
+    margin: 0 0 32px;
+  }
+  .contact-sub {
+    font-family: var(--jp);
+    font-size: 16px;
+    line-height: 2;
+    color: #444;
+    letter-spacing: 0.08em;
+    margin: 0 auto 80px;
+    max-width: 560px;
+  }
+  .contact-form {
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: left;
+    display: grid;
+    gap: 28px;
+  }
+  .contact-form .field { display: grid; gap: 10px; }
+  .contact-form label {
+    font-family: var(--jp);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: #888;
+  }
+  .contact-form label .req {
+    color: #c0392b;
+    margin-left: 6px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+  .contact-form input,
+  .contact-form textarea {
+    font-family: var(--jp);
+    font-size: 15px;
+    color: #111;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid rgba(17,17,17,0.25);
+    padding: 12px 0;
+    outline: none;
+    transition: border-color 0.2s ease;
+    letter-spacing: 0.04em;
+  }
+  .contact-form textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.8;
+  }
+  .contact-form input:focus,
+  .contact-form textarea:focus { border-bottom-color: #111; }
+  .contact-form .submit { margin-top: 16px; text-align: center; }
+  .contact-form button {
+    font-family: var(--jp);
+    font-size: 14px;
+    letter-spacing: 0.24em;
+    color: #fff;
+    background: #111;
+    border: 1px solid #111;
+    padding: 22px 80px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .contact-form button:hover { background: #fff; color: #111; }
+  .contact-form button .arrow {
+    font-family: var(--en);
+    transition: transform 0.3s ease;
+  }
+  .contact-form button:hover .arrow { transform: translateX(4px); }
+
+  .site-footer {
+    width: 1440px;
+    background: #111;
+    color: #fff;
+    padding: 80px 96px 40px;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 60px;
+    padding-bottom: 64px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .footer-brand {
+    font-family: var(--en);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.18em;
+    margin-bottom: 20px;
+  }
+  .footer-tag {
+    font-family: var(--jp);
+    font-size: 13px;
+    line-height: 2;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.08em;
+    max-width: 280px;
+  }
+  .footer-col h4 {
+    font-family: var(--en);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: rgba(255,255,255,0.6);
+    margin: 0 0 24px;
+  }
+  .footer-col ul { list-style: none; margin: 0; padding: 0; }
+  .footer-col li { margin-bottom: 12px; }
+  .footer-col a {
+    font-family: var(--jp);
+    font-size: 14px;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    transition: opacity 0.2s ease;
+  }
+  .footer-col a:hover { opacity: 0.6; }
+  .footer-bottom {
+    padding-top: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--en);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.5);
+  }
+  .footer-bottom .legal { display: flex; gap: 32px; }
+  .footer-bottom .legal a {
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .footer-bottom .legal a:hover { color: #fff; }
+
+  /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    body { font-size: 16px; }
+    .page {
+      width: 100% !important;
+      transform: none !important;
+    }
+    .stage,
+    .gallery,
+    .work,
+    .house,
+    .life,
+    .contact,
+    .site-footer { width: 100%; }
+
+    .stage {
+      height: auto;
+      min-height: 100vh;
+      padding: 100px 24px 60px;
+    }
+    .mask-svg { display: none; }
+    .bg { opacity: 0.45; background-position: center; }
+    .nav { padding: 20px 24px 0; }
+    .menu { gap: 20px; }
+    .menu a { font-size: 12px; letter-spacing: 0.08em; }
+    .meta {
+      position: relative;
+      top: auto; right: auto;
+      transform: none;
+      max-width: none;
+      margin-top: 60vh;
+      text-align: left;
+    }
+    .meta h2 { font-size: 24px; }
+    .scroll { display: none; }
+
+    .gallery { padding: 80px 24px 80px; }
+    .gallery-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .gallery-title { font-size: 26px; }
+    .gallery-lede { text-align: left; }
+    .gallery-grid { grid-template-columns: 1fr; gap: 40px; }
+    .gallery-item.offset-up,
+    .gallery-item.offset-down { margin-top: 0; }
+
+    .work { grid-template-columns: 1fr; min-height: auto; }
+    .work-img { min-height: 280px; }
+    .work-body { padding: 60px 24px; }
+    .work-title { font-size: 26px; }
+    .work-list { grid-template-columns: 1fr; }
+    .work-cta { margin-top: 40px; }
+
+    .house { padding: 80px 24px; }
+    .house-title { font-size: 26px; }
+    .house-grid { grid-template-columns: 1fr; gap: 32px; }
+    .house-right { padding-top: 0; }
+    .house-accent, .house-accent-cap { width: 100%; }
+
+    .life { grid-template-columns: 1fr; min-height: auto; }
+    .life-body { padding: 60px 24px; order: 2; }
+    .life-img { order: 1; min-height: 280px; }
+    .life-title { font-size: 24px; }
+
+    .contact { padding: 80px 24px; }
+    .contact-title { font-size: 56px; }
+    .contact-sub { font-size: 14px; }
+    .contact-form button { padding: 18px 40px; width: 100%; justify-content: center; }
+
+    .site-footer { padding: 60px 24px 32px; }
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 40px 24px;
+      padding-bottom: 40px;
+    }
+    .footer-bottom {
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .footer-grid { grid-template-columns: 1fr; }
+    .meta h2 { font-size: 20px; }
+    .contact-title { font-size: 40px; }
+    .menu { gap: 14px; }
+    .menu a { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+  const { useState, useEffect, useRef, useLayoutEffect } = React;
+
+  function TweaksPanel() { return null; }
+  function TweakSection() { return null; }
+  function TweakSlider() { return null; }
+  function useTweaks(defaults) {
+    const [tweaks, setTweaks] = useState(defaults);
+    const setTweak = (key, value) => setTweaks(prev => ({ ...prev, [key]: value }));
+    return [tweaks, setTweak];
+  }
+
+  const TWEAK_DEFAULTS = {
+    fontSize: 248,
+    letterSpacing: -5,
+    fontWeight: 800,
+    verticalY: 568,
+    splitPercent: 49
+  };
+
+  function Hero() {
+    const [tweaks] = useTweaks(TWEAK_DEFAULTS);
+    const W = 1440, H = 900;
+    const splitX = (tweaks.splitPercent / 100) * W;
+
+    const measureRef = useRef(null);
+    const [mRightLocal, setMRightLocal] = useState(0);
+
+    useLayoutEffect(() => {
+      const node = measureRef.current;
+      if (!node) return;
+      try {
+        const ext = node.getExtentOfChar(2);
+        setMRightLocal(ext.x + ext.width);
+      } catch (e) {
+        const bb = node.getBBox();
+        setMRightLocal(bb.width / 2);
+      }
+    }, [tweaks.fontSize, tweaks.letterSpacing, tweaks.fontWeight]);
+
+    const textX = splitX - mRightLocal;
+
+    return (
+      <div className="page">
+        <div className="stage" id="stage">
+          <div className="bg" aria-hidden="true"></div>
+
+          <svg className="mask-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <text
+                ref={measureRef}
+                x={0} y={-9999}
+                fontFamily="Helvetica Neue, Helvetica, Arial, sans-serif"
+                fontWeight={tweaks.fontWeight}
+                fontSize={tweaks.fontSize}
+                letterSpacing={tweaks.letterSpacing}
+                visibility="hidden"
+              >SIMPLE</text>
+
+              <text
+                id="sample-text"
+                x={textX} y={tweaks.verticalY}
+                fontFamily="Helvetica Neue, Helvetica, Arial, sans-serif"
+                fontWeight={tweaks.fontWeight}
+                fontSize={tweaks.fontSize}
+                letterSpacing={tweaks.letterSpacing}
+              >SIMPLE</text>
+
+              <clipPath id="left-half" clipPathUnits="userSpaceOnUse">
+                <rect x={0} y={0} width={splitX} height={H} />
+              </clipPath>
+
+              <mask id="panel-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
+                <rect x={splitX} y={0} width={W - splitX} height={H} fill="white" />
+                <use href="#sample-text" fill="black" />
+              </mask>
+            </defs>
+
+            <g clipPath="url(#left-half)">
+              <use href="#sample-text" fill="#ffffff" />
+            </g>
+
+            <rect
+              x={splitX} y={0}
+              width={W - splitX} height={H}
+              fill="#ffffff"
+              mask="url(#panel-cutout)"
+            />
+          </svg>
+
+          <header className="nav">
+            <nav style={{marginLeft: 'auto'}}>
+              <ul className="menu">
+                <li><a href="#life">くらし</a></li>
+                <li><a href="#work">仕事</a></li>
+                <li><a href="#house">家</a></li>
+                <li><a href="#contact">お問合せ</a></li>
+              </ul>
+            </nav>
+          </header>
+
+          <aside className="meta">
+            <div className="eyebrow">SINCE 2008 — TOKYO</div>
+            <h2>海と、人と、<br/>未来をつなぐ仕事を。</h2>
+            <p>
+              私たちは、自然と社会の調和を考え、<br/>
+              持続可能な事業づくりに取り組んでいます。<br/>
+              暮らしのそばに、確かな価値を。
+            </p>
+            <a className="cta" href="#about">
+              VIEW MORE <span className="arrow">→</span>
+            </a>
+          </aside>
+
+          <div className="scroll">SCROLL</div>
+        </div>
+
+        <section className="gallery">
+          <div className="gallery-head">
+            <div>
+              <div className="gallery-eyebrow">OUR WORLD — 03 STORIES</div>
+              <h2 className="gallery-title">海と、街と、暮らしと。</h2>
+            </div>
+            <p className="gallery-lede">
+              私たちが大切にしている<br/>
+              三つの風景をご紹介します。<br/>
+              自然・地域・食卓のそばに。
+            </p>
+          </div>
+
+          <div className="gallery-grid">
+            <article className="gallery-item tall">
+              <div className="frame"><img src="assets/turtle.png" alt="海中を泳ぐウミガメ" /></div>
+              <div className="num">01 / NATURE</div>
+              <h3>海とともに生きる。</h3>
+              <p>沖合の透き通る海に暮らす生きものたち。<br/>未来へ受け継ぐ自然との関わりを考えます。</p>
+            </article>
+
+            <article className="gallery-item wide offset-down">
+              <div className="frame"><img src="assets/street.png" alt="南国の街並み" /></div>
+              <div className="num">02 / TOWN</div>
+              <h3>街の鼓動を、感じる。</h3>
+              <p>椰子の木並ぶ通り、色彩豊かな街角。<br/>訪れる人と暮らす人の交わる場所。</p>
+            </article>
+
+            <article className="gallery-item land offset-up">
+              <div className="frame"><img src="assets/udon.png" alt="沖縄そば" /></div>
+              <div className="num">03 / FOOD</div>
+              <h3>食卓に、土地の物語。</h3>
+              <p>受け継がれてきた味わいを、<br/>日々の食卓へ届けていきます。</p>
+            </article>
+          </div>
+        </section>
+
+        <section className="work" id="work">
+          <div className="work-img" role="img" aria-label="網を引く漁師"></div>
+          <div className="work-body">
+            <div className="work-eyebrow">OUR BUSINESS — 事業内容</div>
+            <h2 className="work-title">
+              海とともに、<br/>
+              <span className="accent">手仕事の価値</span>を未来へ。
+            </h2>
+            <p>
+              私たちは、地域の漁師や生産者と手を取り合いながら、
+              海の恵みを丁寧に届けるしごとに取り組んでいます。
+              世代を超えて受け継がれてきた知恵と、
+              いまの暮らしに寄り添う形を、ひとつずつ結び直していく。
+            </p>
+            <p>
+              一杯の食卓、ひとつの製品の背景にある物語まで、
+              まっすぐに伝わるよう心を配ること。それが私たちの仕事です。
+            </p>
+
+            <div className="work-list">
+              <div className="work-list-item"><span className="n">01</span><span className="t">水産物の<br/>仕入れ・流通</span></div>
+              <div className="work-list-item"><span className="n">02</span><span className="t">食品加工と<br/>商品開発</span></div>
+              <div className="work-list-item"><span className="n">03</span><span className="t">地域ブランディング<br/>支援</span></div>
+              <div className="work-list-item"><span className="n">04</span><span className="t">サステナブル<br/>漁業の推進</span></div>
+            </div>
+
+            <a className="work-cta" href="#business">
+              VIEW BUSINESS <span className="arrow">→</span>
+            </a>
+          </div>
+        </section>
+
+        <section className="house" id="house">
+          <div className="house-grid">
+            <div className="house-left">
+              <div className="house-main"><img src="assets/house.jpg" alt="赤瓦の縁側" /></div>
+              <div className="house-meta">
+                <span className="label">SPACE / 01</span>
+                <span>沖縄・赤瓦の家</span>
+              </div>
+            </div>
+
+            <div className="house-right">
+              <div className="house-eyebrow">A QUIET PLACE — 暮らしの空間</div>
+              <h2 className="house-title">
+                風の通る縁側に、<br/>
+                <em>静かな時間</em>が流れる。
+              </h2>
+              <p>深い軒と、太い木の柱。外と内のあいだに置かれた縁側は、光と影、海の風をやさしく招き入れます。</p>
+              <p>何もしない時間にこそ、心がほどけていく。そんな空間の心地よさを、これからの暮らしへ。</p>
+
+              <div className="house-accent"><img src="assets/village.jpg" alt="赤瓦の集落と海" /></div>
+              <div className="house-accent-cap">
+                <span>SPACE / 02</span>
+                <span>集落と、海の眺め</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="life" id="life">
+          <div className="life-body">
+            <div className="life-eyebrow">A LIFE BY THE SEA — ここで暮らす理由</div>
+            <h2 className="life-title">
+              夕陽が、一日のしるしに。<br/>
+              一緒に新しい景色を。
+            </h2>
+            <ul className="life-list">
+              <li><span className="n">01</span><div><h3 className="head">海と、いつもいっしょに。</h3><p className="desc">歩いて十分の砂浜。仕事帰りにそのまま夕陽を眺めに行ける、海と地続きの暮らし。</p></div></li>
+              <li><span className="n">02</span><div><h3 className="head">時間に、ゆとりが生まれる。</h3><p className="desc">通勤も買い物も、ゆるやかな距離で完結。空いた時間が、家族や趣味のための時間に変わります。</p></div></li>
+              <li><span className="n">03</span><div><h3 className="head">食卓に、土地の恵みを。</h3><p className="desc">朝採れの野菜、その日に水揚げされた魚。新鮮な食材が、いつもの食卓を豊かにしてくれます。</p></div></li>
+              <li><span className="n">04</span><div><h3 className="head">人との距離が、ちょうどいい。</h3><p className="desc">顔の見える地域の輪のなかで、ゆるやかに支え合う関係。安心と自由が、同じ場所にあります。</p></div></li>
+            </ul>
+          </div>
+          <div className="life-img" role="img" aria-label="夕陽の海辺で過ごす二人"></div>
+        </section>
+
+        <section className="contact" id="contact">
+          <div className="contact-eyebrow">CONTACT — お問合せ</div>
+          <h2 className="contact-title">Get in Touch.</h2>
+          <p className="contact-sub">
+            くらし・仕事・住まいのこと、<br/>
+            どんな小さなことでも、お気軽にご相談ください。
+          </p>
+
+          <form className="contact-form" onSubmit={(e) => { e.preventDefault(); alert('送信しました（デモ）'); }}>
+            <div className="field"><label htmlFor="cf-name">お名前<span className="req">*</span></label><input id="cf-name" type="text" name="name" required placeholder="山田 太郎" /></div>
+            <div className="field"><label htmlFor="cf-email">メールアドレス<span className="req">*</span></label><input id="cf-email" type="email" name="email" required placeholder="example@simple.jp" /></div>
+            <div className="field"><label htmlFor="cf-tel">電話番号</label><input id="cf-tel" type="tel" name="tel" placeholder="000-0000-0000" /></div>
+            <div className="field"><label htmlFor="cf-note">備考欄</label><textarea id="cf-note" name="note" placeholder="ご相談内容をご記入ください" /></div>
+            <div className="submit"><button type="submit">送信する <span className="arrow">→</span></button></div>
+          </form>
+        </section>
+
+        <footer className="site-footer">
+          <div className="footer-grid">
+            <div className="footer-brand-col">
+              <div className="footer-brand">SIMPLE</div>
+              <p className="footer-tag">海と、街と、暮らしと。<br/>ちいさな手仕事を、未来へつなぐ会社です。</p>
+            </div>
+
+            <div className="footer-col">
+              <h4>SITEMAP</h4>
+              <ul>
+                <li><a href="#life">くらし</a></li>
+                <li><a href="#work">仕事</a></li>
+                <li><a href="#house">家</a></li>
+                <li><a href="#contact">お問合せ</a></li>
+              </ul>
+            </div>
+
+            <div className="footer-col">
+              <h4>BUSINESS</h4>
+              <ul>
+                <li><a href="#">水産物の流通</a></li>
+                <li><a href="#">商品開発</a></li>
+                <li><a href="#">地域支援</a></li>
+                <li><a href="#">サステナブル漁業</a></li>
+              </ul>
+            </div>
+
+            <div className="footer-col">
+              <h4>FOLLOW</h4>
+              <ul>
+                <li><a href="#">Instagram</a></li>
+                <li><a href="#">X (Twitter)</a></li>
+                <li><a href="#">YouTube</a></li>
+                <li><a href="#">Newsletter</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="footer-bottom">
+            <div>© 2026 SIMPLE INC. ALL RIGHTS RESERVED.</div>
+            <div className="legal">
+              <a href="#">PRIVACY</a>
+              <a href="#">TERMS</a>
+              <a href="#">COOKIES</a>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<Hero />);
+
+  /* 1440px のページを viewport 幅に scale。1024px以下では CSS 側で transform を解除 */
+  (function () {
+    function fit() {
+      const page = document.querySelector('.page');
+      if (!page) { requestAnimationFrame(fit); return; }
+      const vw = window.innerWidth;
+      if (vw <= 1024) {
+        page.style.transform = '';
+        document.body.style.height = '';
+        return;
+      }
+      const s = Math.min(1, vw / 1440);
+      page.style.transform = `scale(${s})`;
+      document.body.style.height = (page.getBoundingClientRect().height) + 'px';
+    }
+    fit();
+    window.addEventListener('resize', fit);
+    setTimeout(fit, 50);
+    setTimeout(fit, 300);
+  })();
+</script>
+</body>
+</html>
