@@ -689,6 +689,9 @@
   }
   .footer-bottom .legal a:hover { color: #fff; }
 
+  /* スマホ専用ヒーロー下のテキストブロック（デフォルトは非表示） */
+  .meta-mobile { display: none; }
+
   /* ── Responsive ── */
   @media (max-width: 1024px) {
     body { font-size: 16px; }
@@ -704,26 +707,66 @@
     .contact,
     .site-footer { width: 100%; }
 
+    /* Hero — モバイルでも SVG マスクを表示。aspect比 1440/900 で固定。 */
     .stage {
       height: auto;
-      min-height: 100vh;
-      padding: 100px 24px 60px;
+      min-height: auto;
+      aspect-ratio: 1440 / 900;
+      padding: 0;
+      overflow: hidden;
+      box-shadow: none;
     }
-    .mask-svg { display: none; }
-    .bg { opacity: 0.45; background-position: center; }
-    .nav { padding: 20px 24px 0; }
-    .menu { gap: 20px; }
-    .menu a { font-size: 12px; letter-spacing: 0.08em; }
-    .meta {
-      position: relative;
-      top: auto; right: auto;
-      transform: none;
-      max-width: none;
-      margin-top: 60vh;
-      text-align: left;
-    }
-    .meta h2 { font-size: 24px; }
+    .bg { opacity: 1; background-position: right center; }
+    .nav { padding: 16px 16px 0; }
+    .menu { gap: 14px; }
+    .menu a { font-size: 11px; letter-spacing: 0.06em; }
+    /* デスクトップ用 meta は隠し、モバイル用ブロックを stage の下に表示 */
+    .meta { display: none; }
     .scroll { display: none; }
+
+    .meta-mobile {
+      display: block;
+      background: #fff;
+      padding: 48px 24px 56px;
+    }
+    .meta-mobile .eyebrow {
+      font-family: var(--en);
+      font-size: 11px;
+      letter-spacing: 0.4em;
+      color: #888;
+      margin-bottom: 18px;
+    }
+    .meta-mobile h2 {
+      font-family: var(--jp);
+      font-weight: 500;
+      font-size: 22px;
+      line-height: 1.8;
+      letter-spacing: 0.06em;
+      color: #111;
+      margin: 0 0 22px;
+    }
+    .meta-mobile p {
+      font-family: var(--jp);
+      font-size: 14px;
+      line-height: 1.9;
+      color: #555;
+      letter-spacing: 0.05em;
+      margin: 0 0 28px;
+    }
+    .meta-mobile .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--en);
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      color: #111;
+      text-decoration: none;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #111;
+    }
+    .meta-mobile .cta .arrow { display: inline-block; transition: transform 0.3s ease; }
+    .meta-mobile .cta:hover .arrow { transform: translateX(6px); }
 
     .gallery { padding: 80px 24px 80px; }
     .gallery-head {
@@ -776,10 +819,11 @@
 
   @media (max-width: 480px) {
     .footer-grid { grid-template-columns: 1fr; }
-    .meta h2 { font-size: 20px; }
+    .meta-mobile h2 { font-size: 20px; }
+    .meta-mobile p { font-size: 13px; }
     .contact-title { font-size: 40px; }
-    .menu { gap: 14px; }
-    .menu a { font-size: 11px; }
+    .menu { gap: 10px; }
+    .menu a { font-size: 10px; letter-spacing: 0.04em; }
   }
 </style>
 </head>
@@ -906,6 +950,19 @@
 
           <div className="scroll">SCROLL</div>
         </div>
+
+        <aside className="meta-mobile">
+          <div className="eyebrow">SINCE 2008 — TOKYO</div>
+          <h2>海と、人と、<br/>未来をつなぐ仕事を。</h2>
+          <p>
+            私たちは、自然と社会の調和を考え、<br/>
+            持続可能な事業づくりに取り組んでいます。<br/>
+            暮らしのそばに、確かな価値を。
+          </p>
+          <a className="cta" href="#about">
+            VIEW MORE <span className="arrow">→</span>
+          </a>
+        </aside>
 
         <section className="gallery">
           <div className="gallery-head">
@@ -1078,7 +1135,7 @@
 
           <div className="footer-bottom">
             <div>© 2026 SIMPLE INC. ALL RIGHTS RESERVED.</div>
-            <div class="legal">
+            <div className="legal">
               <a href="#">PRIVACY</a>
               <a href="#">TERMS</a>
               <a href="#">COOKIES</a>
