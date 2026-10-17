@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Masanori Sakuma | AI活用・業務改善・個人開発</title>
-  <meta name="description" content="Masanori Sakumaのポートフォリオ。生成AIを使った業務改善と個人開発の実績をまとめています。">
+  <meta name="description" content="Masanori Sakumaのポートフォリオ。生成AIを活かした業務ツールの開発と、無理なく続く仕組みづくりの実績をまとめています。">
   <meta property="og:title" content="Masanori Sakuma | AI活用・業務改善・個人開発">
-  <meta property="og:description" content="生成AIを使った業務改善と個人開発の実績">
+  <meta property="og:description" content="現場の人数と予算に合わせて、生成AIを活かした業務ツールを開発しています">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://futurefoundry19840305.github.io/portfolio/">
   <meta name="twitter:card" content="summary">
@@ -82,6 +82,7 @@
     a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
     .about p { max-width: 42em; }
+    .about-body { display: grid; gap: 12px; }
     .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; list-style: none; }
     .tags li { background: var(--accent-soft); color: var(--accent); padding: 3px 12px; border-radius: 999px; font-size: .82rem; font-weight: 600; }
 
@@ -208,7 +209,7 @@
         <div class="hero-text">
           <h1>Masanori Sakuma</h1>
           <p class="role">AI活用・業務改善・個人開発</p>
-          <p class="catch">生成AIを使って、日々の業務の手間を減らす仕組みを作っています。</p>
+          <p class="catch">大きなシステムを入れるほどではない、でも手作業のままでは回らない。そんな業務を、生成AIと身近なツールで動く仕組みに変えています。</p>
           <div class="btns">
             <a class="btn btn-primary" href="#projects">実績を見る</a>
             <a class="btn btn-ghost" href="https://github.com/Futurefoundry19840305" target="_blank" rel="noopener noreferrer">GitHubを見る</a>
@@ -221,8 +222,13 @@
     <section id="about" class="about">
       <div class="wrap">
         <h2><span>ABOUT</span>自己紹介</h2>
-        <p class="pending">自己紹介文は準備中です。</p>
+        <div class="about-body">
+          <p>専任のIT担当がいない、使える予算も限られている。そうした現場でも、今あるGoogleのツールや表計算を土台にすれば、業務はかなり楽にできます。</p>
+          <p>作るときに大切にしているのは、少人数でも運用を続けられることです。AIに任せる部分と人が確認する部分をはっきり分け、誤った情報が外に出ない設計にしています。</p>
+          <p>業務の整理や要件定義から、実際に動くツールの開発、使い始めた後の見直しまで、一人で通して担当します。</p>
+        </div>
         <ul class="tags" aria-label="得意領域">
+          <li>業務ツール開発</li>
           <li>生成AI活用</li>
           <li>業務自動化</li>
           <li>プロンプト設計</li>
@@ -243,7 +249,7 @@
             <div class="feat-head">
               <p class="eyebrow">FEATURED ・ 不動産 × 生成AI</p>
               <h3>マイソク比較LP生成システム</h3>
-              <p class="lead">不動産の物件資料（マイソク）をAIで読み取り、最大4物件を見比べられる公開ページを自動で作る業務ツールです。</p>
+              <p class="lead">不動産の物件資料（マイソク）をAIで読み取り、最大4物件を見比べられる公開ページを自動で作る業務ツールです。有料サービスに頼らず、Googleのツールだけで動かしています。</p>
             </div>
 
             <div class="feat-grid">
@@ -314,7 +320,7 @@
             <div class="feat-head">
               <p class="eyebrow">要件定義・基本設計 ・ コンテンツ流通業</p>
               <h3>ライセンス契約管理システムの要件定義</h3>
-              <p class="lead">デジタルコンテンツの利用許諾を仕入れて施設へ提供する事業会社向けに、契約・請求・支払を一元管理するシステムの基本仕様書を作成しました。</p>
+              <p class="lead">少人数で運営する、デジタルコンテンツの利用許諾を仕入れて施設へ提供する事業会社向けに、契約・請求・支払を一元管理するシステムの基本仕様書を作成しました。</p>
             </div>
 
             <div class="flow" aria-label="この会社の商流">
@@ -423,7 +429,7 @@
     <section id="contact" class="contact">
       <div class="wrap">
         <h2><span>CONTACT</span>お問い合わせ</h2>
-        <p class="contact-lead">業務改善・AI導入のご相談、開発や要件定義のご依頼はこちらからどうぞ。内容を確認のうえ、メールでご返信します。</p>
+        <p class="contact-lead">「この作業、もっと楽にならないか」という段階のご相談から歓迎です。業務ツールの開発や要件定義のご依頼も、こちらからどうぞ。内容を確認のうえ、メールでご返信します。</p>
 
         <form id="contact-form" class="form" novalidate>
           <div class="field">
