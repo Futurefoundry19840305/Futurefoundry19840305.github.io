@@ -111,6 +111,21 @@
     .nums div { background: var(--bg-soft); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 2px; }
     .nums strong { font-size: 1.6rem; line-height: 1.2; color: var(--accent); font-variant-numeric: tabular-nums; }
     .nums span { font-size: .78rem; color: var(--text-sub); line-height: 1.5; }
+    .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 8px; }
+    .flow-box { border: 1px solid var(--line); border-radius: 10px; padding: 12px; text-align: center; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .flow-box b { font-size: .92rem; }
+    .flow-box span { font-size: .76rem; color: var(--text-sub); line-height: 1.5; }
+    .flow-box.is-self { border-color: var(--accent); background: var(--accent-soft); }
+    .flow-arrow { display: flex; flex-direction: column; align-items: center; font-size: .72rem; color: var(--text-sub); line-height: 1.6; white-space: nowrap; }
+    .flow-arrow .fwd { color: var(--accent); font-weight: 700; }
+    .flow-arrow .fwd::after { content: " →"; }
+    .flow-arrow .back::before { content: "← "; }
+    @media (max-width: 600px) {
+      .flow { grid-template-columns: 1fr; }
+      .flow-arrow { flex-direction: row; justify-content: center; gap: 16px; }
+      .flow-arrow .fwd::after { content: " ↓"; }
+      .flow-arrow .back::before { content: "↑ "; }
+    }
     .more { border-top: 1px solid var(--line); padding-top: 16px; }
     .more summary { cursor: pointer; font-weight: 700; color: var(--accent); font-size: .95rem; }
     .more summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
@@ -190,6 +205,7 @@
           <li>業務自動化</li>
           <li>プロンプト設計</li>
           <li>Google Apps Script</li>
+          <li>要件定義</li>
           <li>個人開発</li>
         </ul>
       </div>
@@ -271,28 +287,87 @@
           </article>
           <!-- ▲ 注目プロジェクトここまで -->
 
-          <article class="card">
-            <div class="thumb">COMING SOON</div>
-            <div class="card-body">
-              <h3>プロジェクト 2</h3>
-              <dl>
-                <dt>課題：</dt><dd class="pending">準備中</dd>
-                <dt>解決：</dt><dd class="pending">準備中</dd>
-                <dt>成果：</dt><dd class="pending">準備中</dd>
-              </dl>
+          <!-- ▼ プロジェクト：ライセンス契約管理システム（要件定義） -->
+          <article class="card featured" id="license">
+            <div class="feat-head">
+              <p class="eyebrow">要件定義・基本設計 ・ コンテンツ流通業</p>
+              <h3>ライセンス契約管理システムの要件定義</h3>
+              <p class="lead">デジタルコンテンツの利用許諾を仕入れて施設へ提供する事業会社向けに、契約・請求・支払を一元管理するシステムの基本仕様書を作成しました。</p>
             </div>
-          </article>
-          <article class="card">
-            <div class="thumb">COMING SOON</div>
-            <div class="card-body">
-              <h3>プロジェクト 3</h3>
-              <dl>
-                <dt>課題：</dt><dd class="pending">準備中</dd>
-                <dt>解決：</dt><dd class="pending">準備中</dd>
-                <dt>成果：</dt><dd class="pending">準備中</dd>
-              </dl>
+
+            <div class="flow" aria-label="この会社の商流">
+              <div class="flow-box"><b>権利者</b><span>コンテンツを保有</span></div>
+              <div class="flow-arrow"><span class="fwd">許諾</span><span class="back">配信料</span></div>
+              <div class="flow-box is-self"><b>依頼元の会社</b><span>許諾をまとめて再構成</span></div>
+              <div class="flow-arrow"><span class="fwd">再許諾</span><span class="back">利用料</span></div>
+              <div class="flow-box"><b>施設・店舗</b><span>来店客が利用</span></div>
             </div>
+
+            <div class="feat-grid">
+              <div class="feat-col">
+                <h4>解決したかったこと</h4>
+                <dl>
+                  <dt>課題：</dt><dd>契約内容が代表者の記憶に頼っており、顧客情報も会計ソフト・申込書・表計算など8か所に散らばっていた</dd>
+                  <dt>リスク：</dt><dd>仕入契約の終了に気づかず提供を続ける、独占契約が重複する、請求漏れが起きる</dd>
+                  <dt>成果物：</dt><dd class="result">基本仕様書（全14章）と段階的な導入計画</dd>
+                </dl>
+              </div>
+
+              <div class="feat-col">
+                <h4>無理なく進める4段階の計画</h4>
+                <ol class="steps">
+                  <li><b>Step 0　今の運用を整える</b>契約台帳、期限アラート、顧客情報の集約</li>
+                  <li><b>Step 1　契約と取引先を管理</b>取引先・契約・許諾条件・権限を一元化</li>
+                  <li><b>Step 2　請求と会計をつなぐ</b>請求・入金消込・会計ソフト連携・承認</li>
+                  <li><b>Step 3　さらに高度化（任意）</b>独占重複の自動検知、仕入価格・支払精算</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="nums" aria-label="仕様の規模">
+              <div><strong>36</strong><span>機能要件</span></div>
+              <div><strong>339</strong><span>管理する項目（53エンティティ）</span></div>
+              <div><strong>70</strong><span>誤りを防ぐ整合性ルール</span></div>
+              <div><strong>46</strong><span>画面</span></div>
+            </div>
+
+            <details class="more">
+              <summary>設計のポイントを見る</summary>
+              <div class="more-body">
+                <h4>契約違反を「仕組み」で防ぐ</h4>
+                <ul>
+                  <li>施設へ提供を始める前に、仕入契約の有効期限・再許諾の可否・地域・期間・年齢制限など12段階のチェックをすべて通過しないと開始できない設計にしました。</li>
+                  <li>仕入契約が終わると、それに依存する販売契約と提供状況を自動で停止対象として通知します。最も重大な契約違反を未然に防ぐためです。</li>
+                  <li>「サービス丸ごと」と「特定の作品だけ」という粒度の違う独占契約どうしの重なりも、階層を上下にたどって検知します。</li>
+                </ul>
+
+                <h4>複雑なお金の流れを整理する</h4>
+                <ul>
+                  <li>同じ会社が仕入先にも販売先にもなるため、取引先を1社1レコードにまとめ、役割を後から付ける構造にしました。法人番号で二重登録を防ぎます。</li>
+                  <li>請求先は「店舗→ブランド→会社」、支払先は「事業→会社」と階層をさかのぼって1件に決まるルールを定義し、請求漏れ・二重請求を防ぎます。</li>
+                  <li>締め日・支払サイト・起算日の組み合わせから支払期日を自動計算し、銀行休業日も考慮します。</li>
+                </ul>
+
+                <h4>あえて自動化しない判断</h4>
+                <ul>
+                  <li>件数が少ない業務（単価の遡及調整、相殺処理など5機能）は、手作業のほうが早く確実と判断し、自動化の対象から外しました。工数を見積もったうえで、件数が増えた時点で再検討する方針です。</li>
+                </ul>
+
+                <h4>上場審査・内部統制にも対応</h4>
+                <ul>
+                  <li>J-SOX（財務報告の内部統制）を想定し、操作ログの7年保存、自己承認の禁止、月次締めの承認、ID管理などを要件化しました。</li>
+                  <li>少人数で職務を分けきれない部分は、上位者の事後レビューを記録する「代替統制」で補う設計にしています。</li>
+                </ul>
+
+                <h4>担当範囲</h4>
+                <p>業務の流れの整理、データ構造の設計、機能・非機能要件の定義、判定ロジックの仕様化（疑似コードを含む）、権限設計、データ移行計画、未確定事項の洗い出し。特定の製品に依存しない要件として記述しています。</p>
+                <ul class="tags" aria-label="スキル">
+                  <li>要件定義</li><li>業務設計</li><li>データモデリング</li><li>内部統制（J-SOX）</li><li>データ移行計画</li>
+                </ul>
+              </div>
+            </details>
           </article>
+          <!-- ▲ プロジェクトここまで -->
         </div>
       </div>
     </section>
