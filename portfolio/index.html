@@ -82,9 +82,42 @@
     .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; list-style: none; }
     .tags li { background: var(--accent-soft); color: var(--accent); padding: 3px 12px; border-radius: 999px; font-size: .82rem; font-weight: 600; }
 
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
     @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+    /* 注目プロジェクト */
+    .featured { grid-column: 1 / -1; padding: 28px; gap: 24px; border-color: var(--accent); }
+    @media (max-width: 600px) { .featured { padding: 20px; } }
+    .eyebrow { font-size: .74rem; font-weight: 700; letter-spacing: .12em; color: var(--accent); }
+    .featured h3 { font-size: clamp(1.3rem, 3.5vw, 1.6rem); margin: 4px 0 8px; }
+    .lead { color: var(--text-sub); max-width: 46em; }
+    .featured h4 { font-size: .95rem; margin-bottom: 10px; }
+    .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    @media (max-width: 760px) { .feat-grid { grid-template-columns: 1fr; } }
+    .feat-col { min-width: 0; }
+    .featured dl { font-size: .9rem; color: var(--text-sub); display: grid; grid-template-columns: auto 1fr; gap: 6px 4px; }
+    .featured dt { font-weight: 700; color: var(--text); }
+    .result { color: var(--accent); font-weight: 700; }
+    .steps { list-style: none; counter-reset: s; display: grid; gap: 8px; font-size: .88rem; color: var(--text-sub); }
+    .steps li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; column-gap: 10px; align-items: start; }
+    .steps li::before {
+      content: counter(s); grid-row: span 2; width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center; font-size: .78rem; font-weight: 700;
+      background: var(--accent-soft); color: var(--accent);
+    }
+    .steps b { color: var(--text); display: block; line-height: 1.5; }
+    .nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media (max-width: 760px) { .nums { grid-template-columns: repeat(2, 1fr); } }
+    .nums div { background: var(--bg-soft); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+    .nums strong { font-size: 1.6rem; line-height: 1.2; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .nums span { font-size: .78rem; color: var(--text-sub); line-height: 1.5; }
+    .more { border-top: 1px solid var(--line); padding-top: 16px; }
+    .more summary { cursor: pointer; font-weight: 700; color: var(--accent); font-size: .95rem; }
+    .more summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .more-body { display: grid; gap: 10px; margin-top: 16px; font-size: .9rem; max-width: 52em; }
+    .more-body h4 { margin: 10px 0 0; }
+    .more-body ul:not(.tags) { padding-left: 1.2em; display: grid; gap: 6px; color: var(--text-sub); }
+    .more-body p { color: var(--text-sub); }
     .card { min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; }
     .thumb {
       aspect-ratio: 16 / 9; max-width: 100%; display: grid; place-items: center;
@@ -156,6 +189,7 @@
           <li>生成AI活用</li>
           <li>業務自動化</li>
           <li>プロンプト設計</li>
+          <li>Google Apps Script</li>
           <li>個人開発</li>
         </ul>
       </div>
@@ -166,17 +200,77 @@
       <div class="wrap">
         <h2><span>PROJECTS</span>主なプロジェクト</h2>
         <div class="grid">
-          <article class="card">
-            <div class="thumb">COMING SOON</div>
-            <div class="card-body">
-              <h3>プロジェクト 1</h3>
-              <dl>
-                <dt>課題：</dt><dd class="pending">準備中</dd>
-                <dt>解決：</dt><dd class="pending">準備中</dd>
-                <dt>成果：</dt><dd class="pending">準備中</dd>
-              </dl>
+          <!-- ▼ 注目プロジェクト：マイソク比較LP生成システム -->
+          <article class="card featured" id="maisoku">
+            <div class="feat-head">
+              <p class="eyebrow">FEATURED ・ 不動産 × 生成AI</p>
+              <h3>マイソク比較LP生成システム</h3>
+              <p class="lead">不動産の物件資料（マイソク）をAIで読み取り、最大4物件を見比べられる公開ページを自動で作る業務ツールです。</p>
             </div>
+
+            <div class="feat-grid">
+              <div class="feat-col">
+                <h4>解決したこと</h4>
+                <dl>
+                  <dt>課題：</dt><dd>物件資料の内容を手で打ち直して比較表を作るのに手間がかかり、転記ミスも起きやすい</dd>
+                  <dt>解決：</dt><dd>PDFや画像をアップロードするだけで、AIが22項目を読み取り、比較ページの下書きまで作る</dd>
+                  <dt>品質：</dt><dd class="result">自動テスト41項目すべて合格</dd>
+                </dl>
+              </div>
+
+              <div class="feat-col">
+                <h4>使い方は5ステップ</h4>
+                <ol class="steps">
+                  <li><b>アップロード</b>マイソクのPDF・画像を最大4件</li>
+                  <li><b>AIが読み取り</b>賃料・間取り・面積など22項目</li>
+                  <li><b>担当者が確認</b>原本と並べて見比べ、修正</li>
+                  <li><b>プレビュー</b>PC・スマホの見え方を確認</li>
+                  <li><b>公開</b>URLを共有し、問い合わせを受け付け</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="nums" aria-label="主な数字">
+              <div><strong>22</strong><span>AIが読み取る項目</span></div>
+              <div><strong>4</strong><span>1ページで比較できる物件数</span></div>
+              <div><strong>3段階</strong><span>いつでもできる取り下げ</span></div>
+              <div><strong>0円</strong><span>必須の利用料（無料枠で動作）</span></div>
+            </div>
+
+            <details class="more">
+              <summary>こだわった点と技術を見る</summary>
+              <div class="more-body">
+                <h4>誤った情報を公開しない仕組み</h4>
+                <ul>
+                  <li>AIの読み取り結果をそのまま信用せず、金額や面積が現実的な範囲か、原本の表記と食い違っていないかをプログラムで再チェックします。</li>
+                  <li>怪しい値は黄色で「要確認」と表示し、担当者が確定するまで公開ページには出しません。出す場合も「お問い合わせください」と表示します。</li>
+                  <li>所在地・間取り・面積・賃料・取引態様の5項目が確定していないと公開できない「公開前チェック」を設けました。</li>
+                </ul>
+
+                <h4>公開後も安心して運用できる設計</h4>
+                <ul>
+                  <li>公開した時点の内容を固定して配信し、編集は「再公開」するまで反映されません。</li>
+                  <li>成約や募集終了のときは、ページ単位・物件単位・全体停止の3段階ですぐに取り下げられます。掲載期限（既定30日）を過ぎると自動で掲載終了になります。</li>
+                  <li>掲載画像は資料の必要な部分だけを切り抜き、会社名や電話番号は塗りつぶして隠せます。</li>
+                </ul>
+
+                <h4>見る人にとっての分かりやすさ</h4>
+                <ul>
+                  <li>最安の賃料・最大の面積・駅から最短の物件を大きな数字とバッジで示し、条件の良い物件がひと目で分かります。</li>
+                  <li>スマホでは比較表を折りたたみ、画像は横スワイプ、問い合わせボタンは画面下に常に表示します。</li>
+                  <li>地図と、周辺800m以内のコンビニ・スーパー・病院などを近い順に表示できます（任意機能）。</li>
+                </ul>
+
+                <h4>技術構成</h4>
+                <p>Google Apps Script だけで動作し、外部のフレームワークや有料サービスは使っていません。データはスプレッドシートとGoogleドライブに保存し、AIには Gemini API（無料枠）を使っています。</p>
+                <ul class="tags" aria-label="使用技術">
+                  <li>Google Apps Script</li><li>Gemini API</li><li>スプレッドシート</li><li>Googleドライブ</li><li>HTML/CSS/JavaScript</li>
+                </ul>
+              </div>
+            </details>
           </article>
+          <!-- ▲ 注目プロジェクトここまで -->
+
           <article class="card">
             <div class="thumb">COMING SOON</div>
             <div class="card-body">
