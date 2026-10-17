@@ -20,6 +20,8 @@
       --accent: #2459d6;
       --accent-soft: #e7eeff;
       --on-accent: #ffffff;
+      --danger: #c62828;
+      --ok: #1b7a3a;
       --radius: 12px;
       --max: 1080px;
     }
@@ -27,6 +29,7 @@
       :root {
         --bg: #0f1115; --bg-soft: #171a21; --text: #e8eaee; --text-sub: #a2a9b6;
         --line: #2a2f39; --accent: #7ba3ff; --accent-soft: #1b2540; --on-accent: #0f1115;
+        --danger: #ff8a80; --ok: #6fd08c;
         color-scheme: dark;
       }
     }
@@ -156,8 +159,27 @@
     .link small { color: var(--text-sub); font-weight: 400; font-size: .78rem; }
     .link svg { width: 28px; height: 28px; fill: currentColor; }
 
-    .contact { text-align: center; }
-    .contact p { color: var(--text-sub); }
+    .contact-lead { color: var(--text-sub); max-width: 42em; margin-bottom: 24px; }
+    .form { display: grid; gap: 18px; max-width: 640px; }
+    .field { display: grid; gap: 6px; min-width: 0; }
+    .field label { font-weight: 700; font-size: .92rem; }
+    .field em { font-style: normal; font-size: .72rem; color: var(--on-accent); background: var(--accent); border-radius: 4px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
+    .field small { font-size: .74rem; color: var(--text-sub); font-weight: 400; margin-left: 6px; }
+    .field input, .field select, .field textarea {
+      font: inherit; color: var(--text); background: var(--bg);
+      border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; width: 100%;
+    }
+    .field textarea { resize: vertical; min-height: 140px; }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+    .field [aria-invalid="true"] { border-color: var(--danger); }
+    .err { color: var(--danger); font-size: .82rem; }
+    .count { font-size: .76rem; color: var(--text-sub); text-align: right; font-variant-numeric: tabular-nums; }
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    .form .btn { justify-self: start; cursor: pointer; font: inherit; font-weight: 600; }
+    .form .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .status { font-size: .92rem; min-height: 1.5em; }
+    .status.ok { color: var(--ok); font-weight: 700; }
+    .status.ng { color: var(--danger); }
 
     footer { padding-block: 28px; text-align: center; color: var(--text-sub); font-size: .82rem; border-top: 1px solid var(--line); }
   </style>
@@ -397,11 +419,51 @@
       </div>
     </section>
 
-    <!-- F-05 連絡先 -->
+    <!-- F-05 お問い合わせフォーム（Google Apps Script 経由で通知） -->
     <section id="contact" class="contact">
       <div class="wrap">
         <h2><span>CONTACT</span>お問い合わせ</h2>
-        <p>連絡先は準備中です。現在は <a href="https://github.com/Futurefoundry19840305" target="_blank" rel="noopener noreferrer">GitHub</a> からご連絡ください。</p>
+        <p class="contact-lead">業務改善・AI導入のご相談、開発や要件定義のご依頼はこちらからどうぞ。内容を確認のうえ、メールでご返信します。</p>
+
+        <form id="contact-form" class="form" novalidate>
+          <div class="field">
+            <label for="cf-name">お名前 <em>必須</em></label>
+            <input id="cf-name" name="name" type="text" maxlength="50" autocomplete="name" required>
+            <p class="err" id="err-name" hidden></p>
+          </div>
+          <div class="field">
+            <label for="cf-email">メールアドレス <em>必須</em></label>
+            <input id="cf-email" name="email" type="email" maxlength="254" autocomplete="email" inputmode="email" required>
+            <p class="err" id="err-email" hidden></p>
+          </div>
+          <div class="field">
+            <label for="cf-company">会社・所属 <small>任意</small></label>
+            <input id="cf-company" name="company" type="text" maxlength="100" autocomplete="organization">
+            <p class="err" id="err-company" hidden></p>
+          </div>
+          <div class="field">
+            <label for="cf-topic">ご用件</label>
+            <select id="cf-topic" name="topic">
+              <option>業務改善・AI導入のご相談</option>
+              <option>開発のご依頼</option>
+              <option>要件定義・設計のご相談</option>
+              <option>その他</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="cf-message">お問い合わせ内容 <em>必須</em></label>
+            <textarea id="cf-message" name="message" rows="6" maxlength="2000" required></textarea>
+            <p class="count"><span id="cf-count">0</span> / 2000</p>
+            <p class="err" id="err-message" hidden></p>
+          </div>
+          <!-- ボット対策：人には見えない欄 -->
+          <div class="hp" aria-hidden="true">
+            <label for="cf-website">Webサイト</label>
+            <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off">
+          </div>
+          <button type="submit" id="cf-submit" class="btn btn-primary">送信する</button>
+          <p class="status" id="cf-status" role="status" aria-live="polite"></p>
+        </form>
       </div>
     </section>
 
@@ -413,6 +475,94 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ▼ Google Apps Script のウェブアプリURL（…/exec）をここに設定
+    const CONTACT_ENDPOINT = '';
+
+    (function () {
+      const form = document.getElementById('contact-form');
+      const btn = document.getElementById('cf-submit');
+      const status = document.getElementById('cf-status');
+      const msg = document.getElementById('cf-message');
+      const count = document.getElementById('cf-count');
+      const fields = ['name', 'email', 'company', 'message'];
+
+      msg.addEventListener('input', () => { count.textContent = msg.value.length; });
+
+      if (!CONTACT_ENDPOINT) {
+        btn.disabled = true;
+        setStatus('フォームは準備中です。開通までお待ちください。', 'ng');
+        return;
+      }
+
+      function setStatus(text, kind) {
+        status.textContent = text;
+        status.className = 'status' + (kind ? ' ' + kind : '');
+      }
+      function setError(field, text) {
+        const input = form.elements[field];
+        const el = document.getElementById('err-' + field);
+        if (!el) return;
+        el.textContent = text || '';
+        el.hidden = !text;
+        if (input) input.setAttribute('aria-invalid', text ? 'true' : 'false');
+      }
+      function clientCheck(d) {
+        const errs = {};
+        if (!d.name) errs.name = 'お名前を入力してください。';
+        if (!d.email) errs.email = 'メールアドレスを入力してください。';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email)) errs.email = 'メールアドレスの形式を確認してください。';
+        if (!d.message) errs.message = 'お問い合わせ内容を入力してください。';
+        return errs;
+      }
+
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const d = {
+          name: form.elements.name.value.trim(),
+          email: form.elements.email.value.trim(),
+          company: form.elements.company.value.trim(),
+          topic: form.elements.topic.value,
+          message: form.elements.message.value.trim(),
+          website: form.elements.website.value
+        };
+        fields.forEach((f) => setError(f, ''));
+        const errs = clientCheck(d);
+        const keys = Object.keys(errs);
+        if (keys.length) {
+          keys.forEach((k) => setError(k, errs[k]));
+          form.elements[keys[0]].focus();
+          setStatus('入力内容を確認してください。', 'ng');
+          return;
+        }
+
+        btn.disabled = true;
+        setStatus('送信しています…');
+        try {
+          // text/plain で送ると、Apps Script でも事前確認なしで受け付けられる
+          const res = await fetch(CONTACT_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(d)
+          });
+          const out = await res.json();
+          if (out.ok) {
+            form.reset();
+            count.textContent = '0';
+            setStatus('送信しました。お問い合わせありがとうございます。内容を確認してご連絡します。', 'ok');
+          } else if (out.code === 'invalid' && out.errors) {
+            out.errors.forEach((e) => setError(e.field, e.msg));
+            setStatus('入力内容を確認してください。', 'ng');
+          } else {
+            setStatus(out.msg || '送信できませんでした。時間をおいて再度お試しください。', 'ng');
+          }
+        } catch (e) {
+          setStatus('送信できませんでした。通信状況を確認して、再度お試しください。', 'ng');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    })();
   </script>
 </body>
 </html>
