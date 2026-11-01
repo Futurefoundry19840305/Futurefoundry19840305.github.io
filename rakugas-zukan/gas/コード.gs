@@ -7,6 +7,7 @@
  *  ・依頼した人が、サイト上で進み具合（受付・対応中・完了）を確認できるようにする
  *  ・サイトのアクセス状況（個人を特定しない）を「アクセスログ」シートに記録
  *  ・管理者だけが開けるダッシュボード（?view=admin）で、アクセスと依頼の状況を見る
+ *  ・依頼一覧の「商談」「金額」で、契約・継続依頼・保留・失注と依頼単価を管理する
  *
  * 進み具合は、スプレッドシートの「状態」列をプルダウンで変えるだけでサイトに反映されます。
  * 設定のしかたは README.md の「手順1」を見てください。
@@ -19,26 +20,40 @@ const NOTIFY_TO = '';
 // サイトのURL（メール本文に載せるだけ。公開後に書き換えてください）
 const SITE_URL = 'https://futurefoundry19840305.github.io/rakugas-zukan/';
 
-const HEADERS = ['受付日時', '受付番号', '状態', 'お名前', '連絡先', 'ご希望', '使いたいサービス', '自動化したいこと', '頻度', '希望の時期', '参考にした標本', 'メモ'];
-const STATUSES = ['受付', '対応中', '完了'];
-const COL = { date: 1, id: 2, status: 3, name: 4, contact: 5, want: 8 };
+const HEADERS = ['受付日時', '受付番号', '状態', 'お名前', '連絡先', 'ご希望', '使いたいサービス', '自動化したいこと', '頻度', '希望の時期', '参考にした標本', 'メモ', '商談', '金額（円）', '確定日'];
+const STATUSES = ['受付', '対応中', '完了'];          // 依頼者に見せる進み具合
+const DEALS = ['未確定', '契約', '継続依頼', '保留', '失注']; // 管理者だけが見る商談の結果
+const WON = ['契約', '継続依頼'];
+const COL = { date: 1, id: 2, status: 3, name: 4, contact: 5, plan: 6, want: 8, deal: 13, amount: 14, decided: 15 };
+// 単発の依頼に最初に入れておく金額（見積もりに合わせて書き換える）
+const DEFAULT_PRICE = 3000;
 
 // アクセスログ（サイトから届く匿名の記録）
 const LOG_SHEET = 'アクセスログ';
 const LOG_HEADERS = ['日時', '訪問者ID', 'セッションID', 'イベント', '対象', '値', 'ページ', '端末', '画面幅'];
 const EVENTS = ['pageview', 'scroll', 'leave', 'filter', 'search', 'sort', 'spec_open', 'copy_code', 'scene', 'req_open', 'req_submit'];
-// ログを残す日数（これより古い行はダッシュボードの集計に使わない）
-const KEEP_DAYS = 90;
 
 /** 最初に1回だけ実行：表の見た目を整え、テストメールを送る */
 function setup() {
   const sh = sheet_();
   sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold').setBackground('#1a2747').setFontColor('#ffffff');
   sh.setFrozenRows(1);
+  const rows = sh.getMaxRows() - 1;
   const rule = SpreadsheetApp.newDataValidation().requireValueInList(STATUSES, true).setAllowInvalid(false).build();
-  sh.getRange(2, COL.status, sh.getMaxRows() - 1, 1).setDataValidation(rule);
-  [150, 120, 80, 120, 200, 200, 180, 360, 100, 110, 220, 200].forEach((w, i) => sh.setColumnWidth(i + 1, w));
-  sh.getRange(2, COL.want, sh.getMaxRows() - 1, 1).setWrap(true);
+  sh.getRange(2, COL.status, rows, 1).setDataValidation(rule);
+  const dealRule = SpreadsheetApp.newDataValidation().requireValueInList(DEALS, true).setAllowInvalid(false).build();
+  sh.getRange(2, COL.deal, rows, 1).setDataValidation(dealRule);
+  sh.getRange(2, COL.amount, rows, 1).setNumberFormat('#,##0');
+  sh.getRange(2, COL.decided, rows, 1).setNumberFormat('yyyy/mm/dd');
+  sh.getRange(1, COL.deal, 1, 3).setBackground('#17784a');
+  [150, 120, 80, 120, 200, 200, 180, 360, 100, 110, 220, 200, 100, 110, 110].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+  sh.getRange(2, COL.want, rows, 1).setWrap(true);
+  // 以前からある行の「商談」が空なら「未確定」にする
+  const last = sh.getLastRow();
+  if (last > 1) {
+    const r = sh.getRange(2, COL.deal, last - 1, 1);
+    r.setValues(r.getValues().map((v) => [v[0] === '' ? '未確定' : v[0]]));
+  }
   logSheet_();
   MailApp.sendEmail(notifyTo_(), '【ラクガス図鑑】受付窓口の準備ができました',
     'このメールが届いていれば、通知の設定は完了です。\n次は「デプロイ」→「新しいデプロイ」でウェブアプリとして公開してください。\n\n依頼一覧：' + SpreadsheetApp.openById(SHEET_ID).getUrl(),
@@ -78,13 +93,27 @@ function doPost(e) {
   try {
     // 先頭が「=」などだと数式として動くため、文字として保存する
     const safe = (v) => (typeof v === 'string' && /^[=+\-@]/.test(v) ? "'" + v : v);
-    sheet_().appendRow([row.date, row.id, row.status, row.name, row.contact, row.plan, row.services, row.want, row.freq, row.due, row.ref, ''].map(safe));
+    const price = /^単発/.test(row.plan) ? DEFAULT_PRICE : '';   // 要相談は空欄（任意で入力）
+    sheet_().appendRow([row.date, row.id, row.status, row.name, row.contact, row.plan, row.services, row.want, row.freq, row.due, row.ref, '', '未確定', price, ''].map(safe));
   } finally {
     lock.releaseLock();
   }
 
   try { notify_(row); } catch (err) { console.error('通知メールの送信に失敗', err); }
   return json_({ ok: true, id: row.id });
+}
+
+/** 依頼一覧で「商談」を契約・継続依頼・失注にしたら、確定日を自動で入れる（シートを手で編集したときに動く） */
+function onEdit(e) {
+  try {
+    const r = e.range, sh = r.getSheet();
+    if (sh.getIndex() !== 1 || r.getRow() < 2 || r.getColumn() > COL.deal || r.getLastColumn() < COL.deal) return;
+    for (let row = r.getRow(); row <= r.getLastRow(); row++) {
+      const v = String(sh.getRange(row, COL.deal).getValue());
+      const cell = sh.getRange(row, COL.decided);
+      if ((WON.indexOf(v) >= 0 || v === '失注') && !cell.getValue()) cell.setValue(new Date());
+    }
+  } catch (err) { /* 手入力のじゃまはしない */ }
 }
 
 /** 進み具合の確認（サイトの「あなたの依頼」から）。連絡先は返さない */
@@ -202,114 +231,165 @@ function logSheet_() {
    「自分のみ」に制限したデプロイのURLで開いてください。
    それ以外の人が開いても、データは表示しません。
    ========================================================= */
-function admin_() {
+function isAdmin_() {
   const viewer = Session.getActiveUser().getEmail();
-  const owner = Session.getEffectiveUser().getEmail();
-  if (!viewer || viewer !== owner) {
+  return !!viewer && viewer === Session.getEffectiveUser().getEmail();
+}
+
+function admin_() {
+  if (!isAdmin_()) {
     return HtmlService.createHtmlOutput('<p style="font-family:sans-serif;padding:24px">この画面は管理者だけが見られます。</p>').setTitle('ラクガス図鑑');
   }
+  // 最初の表示：直近30日・日ごと
+  const to = ymd_(Date.now()), from = ymd_(Date.now() - 29 * DAY);
   const t = HtmlService.createTemplateFromFile('dashboard');
-  // 検索語などに含まれる「<」で画面が壊れないよう、エスケープして埋め込む
-  t.payload = JSON.stringify(analytics_()).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, '');
+  t.payload = JSON.stringify(dashboardQuery(from, to, 'day')).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, '');
   return t.evaluate().setTitle('ラクガス図鑑 ダッシュボード').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-/** 集計：7日・30日・90日の3期間ぶんをまとめて作る */
-function analytics_() {
-  const tz = 'Asia/Tokyo';
-  const now = new Date();
-  const fmt = (d) => Utilities.formatDate(d, tz, 'yyyy-MM-dd');
-  const since = now.getTime() - KEEP_DAYS * 86400000;
+/* ---------- 日付の道具（日本時間） ---------- */
+const DAY = 86400000, JST = 9 * 3600000;
+const pad_ = (n) => String(n).padStart(2, '0');
+function ymd_(ts) { const j = new Date(ts + JST); return j.getUTCFullYear() + '-' + pad_(j.getUTCMonth() + 1) + '-' + pad_(j.getUTCDate()); }
+function parseYmd_(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s)); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) - JST : NaN; }
+/** 集計単位ごとの区切り：day=日 / week=月曜はじまりの週 / month=月 / year=年 */
+function bucketOf_(ts, unit) {
+  const j = new Date(ts + JST), y = j.getUTCFullYear(), m = j.getUTCMonth(), d = j.getUTCDate();
+  if (unit === 'year') return { key: String(y), label: y + '年' };
+  if (unit === 'month') return { key: y + '-' + pad_(m + 1), label: y + '年' + (m + 1) + '月' };
+  if (unit === 'week') {
+    const s = new Date(Date.UTC(y, m, d - ((j.getUTCDay() + 6) % 7)));
+    return { key: s.getUTCFullYear() + '-' + pad_(s.getUTCMonth() + 1) + '-' + pad_(s.getUTCDate()), label: s.getUTCFullYear() + '/' + (s.getUTCMonth() + 1) + '/' + s.getUTCDate() + '〜' };
+  }
+  return { key: y + '-' + pad_(m + 1) + '-' + pad_(d), label: y + '/' + (m + 1) + '/' + d };
+}
+const money_ = (v) => { const n = typeof v === 'number' ? v : Number(String(v).replace(/[^\d.]/g, '')); return isFinite(n) && n > 0 ? Math.round(n) : 0; };
+const planKey_ = (p) => { const s = String(p || '').replace(/^'/, ''); return /^単発/.test(s) ? '単発の作成' : /^継続/.test(s) ? '継続サポート・業務改善' : /相談/.test(s) ? 'まずは相談' : (s.split('（')[0] || '未選択'); };
 
-  const log = SpreadsheetApp.openById(SHEET_ID).getSheetByName(LOG_SHEET);
-  const rows = log && log.getLastRow() > 1 ? log.getRange(2, 1, log.getLastRow() - 1, LOG_HEADERS.length).getValues() : [];
-  const ev = rows.filter((r) => r[0] instanceof Date && r[0].getTime() >= since).map((r) => ({
-    ts: r[0].getTime(), day: fmt(r[0]), vid: String(r[1]), sid: String(r[2]), e: String(r[3]),
-    t: String(r[4]).replace(/^'/, ''), v: String(r[5]).replace(/^'/, ''), device: String(r[7]),
-  }));
+/**
+ * 集計（ダッシュボードの画面から google.script.run で呼ばれる）
+ * @param {string} from 開始日 yyyy-MM-dd
+ * @param {string} to   終了日 yyyy-MM-dd（この日を含む）
+ * @param {string} unit day | week | month | year
+ */
+function dashboardQuery(from, to, unit) {
+  if (!isAdmin_()) throw new Error('この操作は管理者だけができます。');
+  unit = ['day', 'week', 'month', 'year'].indexOf(unit) >= 0 ? unit : 'day';
+  const fromTs = parseYmd_(from), toTs = parseYmd_(to) + DAY - 1;
+  if (!isFinite(fromTs) || !isFinite(toTs) || fromTs > toTs) return { error: '期間の指定が正しくありません。開始日が終了日より前になるように選んでください。' };
+  const spanDays = Math.round((toTs + 1 - fromTs) / DAY);
+  if (unit === 'day' && spanDays > 400) return { error: '「日ごと」は400日までです。期間を短くするか、週・月・年ごとに切り替えてください。' };
+  if (spanDays > 3660) return { error: '期間は10年までにしてください。' };
 
-  const reqSh = sheet_();
-  const reqRows = reqSh.getLastRow() > 1 ? reqSh.getRange(2, 1, reqSh.getLastRow() - 1, HEADERS.length).getValues() : [];
-
-  const periods = {};
-  [7, 30, 90].forEach((days) => {
-    const from = now.getTime() - days * 86400000;
-    const E = ev.filter((x) => x.ts >= from);
-    const visitors = new Set(E.map((x) => x.vid));
-    const sessions = new Set(E.map((x) => x.sid));
-    const sessWith = (name, test) => new Set(E.filter((x) => x.e === name && (!test || test(x))).map((x) => x.sid));
-    const count = (name) => E.filter((x) => x.e === name).length;
-    const top = (name, n, test) => {
-      const m = {};
-      E.filter((x) => x.e === name && x.t && (!test || test(x))).forEach((x) => { m[x.t] = (m[x.t] || 0) + 1; });
-      return Object.keys(m).map((k) => [k, m[k]]).sort((a, b) => b[1] - a[1]).slice(0, n);
-    };
-    // 日別
-    const daily = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const d = fmt(new Date(now.getTime() - i * 86400000));
-      const De = E.filter((x) => x.day === d);
-      daily.push([d, new Set(De.map((x) => x.vid)).size, new Set(De.map((x) => x.sid)).size, De.filter((x) => x.e === 'pageview').length]);
+  // 区切りの一覧（データがない区切りも0として並べる）
+  const buckets = [], index = {};
+  for (let ts = fromTs; ts <= toTs; ts += DAY) {
+    const b = bucketOf_(ts, unit);
+    if (index[b.key] == null) {
+      index[b.key] = buckets.length;
+      buckets.push({ key: b.key, label: b.label, v: {}, s: {}, pageviews: 0, reqOpen: {}, requests: 0, contract: 0, repeat: 0, hold: 0, lost: 0, open: 0, revenue: 0, priced: 0 });
     }
-    // 滞在時間：セッションごとの最大値の平均（3時間を超えるものは除く）
-    const stay = {};
-    E.filter((x) => x.e === 'leave').forEach((x) => { const s = Number(x.v) || 0; if (s <= 10800) stay[x.sid] = Math.max(stay[x.sid] || 0, s); });
-    const stayVals = Object.keys(stay).map((k) => stay[k]);
-    const avgStay = stayVals.length ? Math.round(stayVals.reduce((a, b) => a + b, 0) / stayVals.length) : 0;
-    // スクロール到達：各セッションの最大到達点
-    const scr = {};
-    E.filter((x) => x.e === 'scroll').forEach((x) => { scr[x.sid] = Math.max(scr[x.sid] || 0, Number(x.v) || 0); });
-    const pvSessions = sessWith('pageview');
-    const scroll = [25, 50, 75, 100].map((m) => [m + '%', Object.keys(scr).filter((k) => scr[k] >= m).length]);
-    // 端末：セッションの最初の端末
-    const dev = {};
-    E.filter((x) => x.e === 'pageview').forEach((x) => { if (!dev[x.sid]) dev[x.sid] = x.device || '不明'; });
-    const devices = {};
-    Object.keys(dev).forEach((k) => { devices[dev[k]] = (devices[dev[k]] || 0) + 1; });
-    // 依頼
-    const R = reqRows.filter((r) => r[0] instanceof Date && r[0].getTime() >= from);
-    const status = { '受付': 0, '対応中': 0, '完了': 0 };
-    R.forEach((r) => { const st = String(r[COL.status - 1]); if (status[st] != null) status[st]++; });
+  }
+  const at = (ts) => buckets[index[bucketOf_(ts, unit).key]];
+  const inRange = (ts) => ts >= fromTs && ts <= toTs;
 
-    periods[days] = {
-      kpi: {
-        visitors: visitors.size, sessions: sessions.size, pageviews: count('pageview'), avgStay: avgStay,
-        reqOpen: sessWith('req_open').size, reqSubmit: count('req_submit') ? E.filter((x) => x.e === 'req_submit' && x.v === '1').length : 0,
-        requests: R.length,
-      },
-      daily: daily,
-      funnel: [
-        ['サイトを訪れた', pvSessions.size],
-        ['標本を開いた', sessWith('spec_open').size],
-        ['依頼フォームを開いた', sessWith('req_open').size],
-        ['依頼を送った', sessWith('req_submit', (x) => x.v === '1').size],
-      ],
-      specimens: top('spec_open', 10),
-      searches: top('search', 10),
-      noHit: top('search', 10, (x) => x.v === '0'),
-      scenes: top('scene', 6),
-      reqFrom: top('req_open', 8),
-      refs: top('pageview', 8),
-      filters: top('filter', 10),
-      copies: top('copy_code', 5),
-      devices: Object.keys(devices).map((k) => [k, devices[k]]).sort((a, b) => b[1] - a[1]),
-      scroll: scroll, scrollBase: Object.keys(scr).length || pvSessions.size,
-      status: status,
-      submitFail: E.filter((x) => x.e === 'req_submit' && x.v === '0').length,
-    };
+  /* ---- アクセス ---- */
+  const log = SpreadsheetApp.openById(SHEET_ID).getSheetByName(LOG_SHEET);
+  const raw = log && log.getLastRow() > 1 ? log.getRange(2, 1, log.getLastRow() - 1, LOG_HEADERS.length).getValues() : [];
+  const E = [];
+  raw.forEach((r) => {
+    if (!(r[0] instanceof Date)) return;
+    const ts = r[0].getTime();
+    if (!inRange(ts)) return;
+    E.push({ ts: ts, vid: String(r[1]), sid: String(r[2]), e: String(r[3]), t: String(r[4]).replace(/^'/, ''), v: String(r[5]).replace(/^'/, ''), device: String(r[7]) });
   });
+  E.forEach((x) => {
+    const b = at(x.ts);
+    b.v[x.vid] = 1; b.s[x.sid] = 1;
+    if (x.e === 'pageview') b.pageviews++;
+    if (x.e === 'req_open') b.reqOpen[x.sid] = 1;
+  });
+  const visitors = new Set(E.map((x) => x.vid)), sessions = new Set(E.map((x) => x.sid));
+  const sessWith = (name, test) => new Set(E.filter((x) => x.e === name && (!test || test(x))).map((x) => x.sid));
+  const top = (name, n, test) => {
+    const m = {};
+    E.filter((x) => x.e === name && x.t && (!test || test(x))).forEach((x) => { m[x.t] = (m[x.t] || 0) + 1; });
+    return Object.keys(m).map((k) => [k, m[k]]).sort((a, b) => b[1] - a[1]).slice(0, n);
+  };
+  const stay = {};
+  E.filter((x) => x.e === 'leave').forEach((x) => { const s = Number(x.v) || 0; if (s <= 10800) stay[x.sid] = Math.max(stay[x.sid] || 0, s); });
+  const stayVals = Object.keys(stay).map((k) => stay[k]);
+  const scr = {};
+  E.filter((x) => x.e === 'scroll').forEach((x) => { scr[x.sid] = Math.max(scr[x.sid] || 0, Number(x.v) || 0); });
+  const pvSessions = sessWith('pageview');
+  const dev = {}, devices = {};
+  E.filter((x) => x.e === 'pageview').forEach((x) => { if (!dev[x.sid]) dev[x.sid] = x.device || '不明'; });
+  Object.keys(dev).forEach((k) => { devices[dev[k]] = (devices[dev[k]] || 0) + 1; });
 
-  const recent = reqRows.filter((r) => r[0] instanceof Date).sort((a, b) => b[0] - a[0]).slice(0, 6).map((r) => ({
-    date: Utilities.formatDate(r[0], tz, 'M/d HH:mm'), name: String(r[COL.name - 1]).replace(/^'/, ''),
-    plan: String(r[5]).replace(/^'/, ''), status: String(r[COL.status - 1]), want: String(r[COL.want - 1]).replace(/^'/, '').slice(0, 80),
-  }));
+  /* ---- 依頼・商談・単価 ----
+     依頼数・保留・未確定は「受付日」、契約・継続依頼・失注・売上は「確定日」（空なら受付日）で数える */
+  const reqSh = sheet_();
+  const R = reqSh.getLastRow() > 1 ? reqSh.getRange(2, 1, reqSh.getLastRow() - 1, HEADERS.length).getValues() : [];
+  const T = { requests: 0, contract: 0, repeat: 0, hold: 0, lost: 0, open: 0, revenue: 0, priced: 0, unpriced: 0, holdValue: 0, openValue: 0 };
+  const prices = [], plans = {};
+  const recent = [];
+  R.forEach((r) => {
+    if (!(r[0] instanceof Date)) return;
+    const rec = r[0].getTime();
+    const deal = DEALS.indexOf(String(r[COL.deal - 1])) >= 0 ? String(r[COL.deal - 1]) : '未確定';
+    const amount = money_(r[COL.amount - 1]);
+    const decided = r[COL.decided - 1] instanceof Date ? r[COL.decided - 1].getTime() : rec;
+    if (inRange(rec)) {
+      const b = at(rec); b.requests++; T.requests++;
+      if (deal === '保留') { b.hold++; T.hold++; T.holdValue += amount; }
+      if (deal === '未確定') { b.open++; T.open++; T.openValue += amount; }
+      recent.push({ ts: rec, date: Utilities.formatDate(r[0], 'Asia/Tokyo', 'yyyy/M/d'), name: String(r[COL.name - 1]).replace(/^'/, ''), plan: planKey_(r[COL.plan - 1]), deal: deal, amount: amount, status: String(r[COL.status - 1]), want: String(r[COL.want - 1]).replace(/^'/, '').slice(0, 70) });
+    }
+    if ((WON.indexOf(deal) >= 0 || deal === '失注') && inRange(decided)) {
+      const b = at(decided);
+      if (deal === '失注') { b.lost++; T.lost++; return; }
+      if (deal === '契約') { b.contract++; T.contract++; } else { b.repeat++; T.repeat++; }
+      const key = deal === '継続依頼' ? '継続依頼（月額）' : planKey_(r[COL.plan - 1]);
+      const P = plans[key] || (plans[key] = { n: 0, priced: 0, total: 0, min: 0, max: 0 });
+      P.n++;
+      if (amount) {
+        b.revenue += amount; b.priced++; T.revenue += amount; T.priced++; prices.push(amount);
+        P.priced++; P.total += amount; P.min = P.min ? Math.min(P.min, amount) : amount; P.max = Math.max(P.max, amount);
+      } else T.unpriced++;
+    }
+  });
+  prices.sort((a, b) => a - b);
+  const median = prices.length ? (prices.length % 2 ? prices[(prices.length - 1) / 2] : Math.round((prices[prices.length / 2 - 1] + prices[prices.length / 2]) / 2)) : 0;
+  const won = T.contract + T.repeat;
 
   return {
-    generated: Utilities.formatDate(now, tz, 'yyyy/MM/dd HH:mm'),
-    periods: periods,
-    recent: recent,
+    generated: Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm'),
+    range: { from: from, to: to, unit: unit, days: spanDays },
+    buckets: buckets.map((b) => ({
+      key: b.key, label: b.label, visitors: Object.keys(b.v).length, sessions: Object.keys(b.s).length, pageviews: b.pageviews,
+      reqOpen: Object.keys(b.reqOpen).length, requests: b.requests, contract: b.contract, repeat: b.repeat, hold: b.hold, lost: b.lost, open: b.open,
+      revenue: b.revenue, priced: b.priced,
+    })),
+    access: {
+      visitors: visitors.size, sessions: sessions.size, pageviews: E.filter((x) => x.e === 'pageview').length,
+      avgStay: stayVals.length ? Math.round(stayVals.reduce((a, b) => a + b, 0) / stayVals.length) : 0,
+      reqOpen: sessWith('req_open').size,
+      funnel: [['サイトを訪れた', pvSessions.size], ['標本を開いた', sessWith('spec_open').size], ['依頼フォームを開いた', sessWith('req_open').size], ['依頼を送った', sessWith('req_submit', (x) => x.v === '1').size]],
+      specimens: top('spec_open', 10), searches: top('search', 10), noHit: top('search', 10, (x) => x.v === '0'),
+      scenes: top('scene', 6), reqFrom: top('req_open', 8), refs: top('pageview', 8), filters: top('filter', 10),
+      devices: Object.keys(devices).map((k) => [k, devices[k]]).sort((a, b) => b[1] - a[1]),
+      scroll: [25, 50, 75, 100].map((m) => [m + '%', Object.keys(scr).filter((k) => scr[k] >= m).length]),
+      scrollBase: Object.keys(scr).length || pvSessions.size,
+      submitFail: E.filter((x) => x.e === 'req_submit' && x.v === '0').length,
+    },
+    deals: Object.assign(T, {
+      won: won, winRate: won + T.lost ? Math.round((won / (won + T.lost)) * 1000) / 10 : null,
+      avgPrice: T.priced ? Math.round(T.revenue / T.priced) : 0, medianPrice: median,
+      minPrice: prices[0] || 0, maxPrice: prices[prices.length - 1] || 0,
+    }),
+    plans: Object.keys(plans).map((k) => { const P = plans[k]; return [k, P.n, P.priced, P.total, P.priced ? Math.round(P.total / P.priced) : 0, P.min, P.max]; }).sort((a, b) => b[3] - a[3]),
+    recent: recent.sort((a, b) => b.ts - a.ts).slice(0, 8),
     sheetUrl: SpreadsheetApp.openById(SHEET_ID).getUrl(),
     siteUrl: SITE_URL,
-    logRows: rows.length,
   };
 }
