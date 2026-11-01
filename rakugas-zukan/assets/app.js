@@ -9,6 +9,66 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---------- アクセス解析（個人を特定しない） ----------
+     送るのは、ランダムな訪問者ID・どの機能が使われたか・端末の種類だけ。
+     名前やメールアドレス、IPアドレスは送らない。
+     「トラッキング拒否」の設定、または ?notrack=1 で開いたブラウザでは送らない。 */
+  const T = (() => {
+    let off = !CFG.gasUrl || navigator.doNotTrack === '1' || navigator.globalPrivacyControl === true;
+    try {
+      if (/[?&]notrack=1\b/.test(location.search)) localStorage.setItem('rakugas-notrack', '1');
+      if (/[?&]notrack=0\b/.test(location.search)) localStorage.removeItem('rakugas-notrack');
+      if (localStorage.getItem('rakugas-notrack') === '1') off = true;
+    } catch (e) {}
+    const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+    const keep = (getStore, k) => { try { const st = getStore(); let v = st.getItem(k); if (!v) { v = rid(); st.setItem(k, v); } return v; } catch (e) { return rid(); } };
+    const vid = keep(() => localStorage, 'rakugas-vid');
+    const sid = keep(() => sessionStorage, 'rakugas-sid');
+    const w = innerWidth;
+    const device = w < 600 ? 'スマホ' : w < 1024 ? 'タブレット' : 'PC';
+    let q = [], timer = null;
+    function flush() {
+      if (off || !q.length) return;
+      const body = JSON.stringify({ kind: 'track', vid, sid, device, width: w, page: location.pathname, events: q.splice(0, 50) });
+      try {
+        const ok = navigator.sendBeacon && navigator.sendBeacon(CFG.gasUrl, new Blob([body], { type: 'text/plain' }));
+        if (!ok) fetch(CFG.gasUrl, { method: 'POST', body, mode: 'no-cors', keepalive: true }).catch(() => {});
+      } catch (e) {}
+    }
+    function ev(name, target, value) {
+      if (off) return;
+      q.push({ e: name, t: String(target ?? '').slice(0, 100), v: String(value ?? '').slice(0, 50), at: Date.now() });
+      clearTimeout(timer);
+      if (q.length >= 10) flush(); else timer = setTimeout(flush, 6000);
+    }
+    return { ev, flush };
+  })();
+  (function () {
+    // 参照元：utm_source があればそれ、なければ外部サイトのドメイン
+    let ref = '直接・ブックマーク';
+    try {
+      const u = new URL(location.href).searchParams.get('utm_source');
+      if (u) ref = u.slice(0, 40);
+      else if (document.referrer) { const h = new URL(document.referrer).hostname; if (h && h !== location.hostname) ref = h; }
+    } catch (e) {}
+    T.ev('pageview', ref);
+    // スクロールの到達率
+    const marks = [25, 50, 75, 100], hit = new Set();
+    addEventListener('scroll', () => {
+      const d = document.documentElement, pct = ((scrollY + innerHeight) / d.scrollHeight) * 100;
+      marks.forEach((m) => { if (pct >= m - 1 && !hit.has(m)) { hit.add(m); T.ev('scroll', '', m); } });
+    }, { passive: true });
+    // 滞在時間（画面が見えていた秒数）
+    let shown = 0, since = document.visibilityState === 'visible' ? Date.now() : 0;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        if (since) shown += Date.now() - since; since = 0;
+        T.ev('leave', '', Math.round(shown / 1000)); T.flush();
+      } else since = Date.now();
+    });
+    addEventListener('pagehide', () => T.flush());
+  })();
+
   /* ---------- アイコン ---------- */
   const I = Object.assign({}, Z.icons, {
     search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
@@ -79,12 +139,18 @@
   }).join('');
   habBox.addEventListener('click', (e) => {
     const b = e.target.closest('.hab'); if (!b) return;
-    cat = b.dataset.cat;
+    cat = b.dataset.cat; T.ev('filter', cat);
     habBox.querySelectorAll('.hab').forEach((x) => x.setAttribute('aria-pressed', x === b));
     renderList();
   });
-  $('q').addEventListener('input', (e) => { q = e.target.value; renderList(); });
-  $('sort').addEventListener('change', (e) => { sort = e.target.value; renderList(); });
+  let searchTimer = null;
+  $('q').addEventListener('input', (e) => {
+    q = e.target.value; renderList();
+    clearTimeout(searchTimer);
+    const word = q.trim();
+    if (word) searchTimer = setTimeout(() => T.ev('search', word, $('specimens').querySelectorAll('.label').length), 1500);
+  });
+  $('sort').addEventListener('change', (e) => { sort = e.target.value; renderList(); T.ev('sort', sort === 'save' ? '削減時間順' : '番号順'); });
 
   function renderList() {
     const k = q.trim().toLowerCase();
@@ -136,6 +202,7 @@
       </div>
       <div class="plate-foot"><button class="btn" type="button" data-close>閉じる</button><button class="btn primary" type="button" data-ref="${esc(x.no + ' ' + x.t)}">これに近いものを依頼する（${priceOf(x.lv)}）</button></div>`;
     if (!plate.open) { try { plate.showModal(); } catch (e) { plate.setAttribute('open', ''); } }
+    T.ev('spec_open', x.no + ' ' + x.t);
     if (!fromHash) history.replaceState(null, '', '#no-' + String(n).padStart(3, '0'));
   }
   function clearHash() { if (/^#no-\d{3}$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
@@ -152,7 +219,7 @@
   }
   document.addEventListener('click', (e) => {
     const c = e.target.closest('[data-copy]');
-    if (c) { c.dataset.label = 'コピー'; copyText(SPEC[+c.dataset.copy - 1].code, c, 'コピーしました'); }
+    if (c) { c.dataset.label = 'コピー'; const x = SPEC[+c.dataset.copy - 1]; copyText(x.code, c, 'コピーしました'); T.ev('copy_code', x.no + ' ' + x.t); }
   });
 
   /* ---------- 観察窓（シアター） ---------- */
@@ -213,6 +280,7 @@
   }
   function selectScene(i) {
     cur = i; [...$('thTabs').children].forEach((b, k) => b.setAttribute('aria-selected', k === i));
+    T.ev('scene', SC[i].tab);
     reduce ? renderScene(SC[i], true) : play(i);
   }
   $('thTabs').addEventListener('click', (e) => { const b = e.target.closest('.th-tab'); if (b) selectScene([...$('thTabs').children].indexOf(b)); });
@@ -229,7 +297,9 @@
   const dlg = $('dlg'), form = $('reqForm'), msg = $('formMsg'), sendBtn = $('sendBtn');
   let openedAt = 0;
   const show = (v) => [form, $('doneView'), $('offView')].forEach((x) => { x.hidden = x !== v; });
-  function openReq(ref) {
+  const placeOf = (el) => !el ? 'その他' : el.closest('#theater') ? '観察窓' : el.closest('#plate') ? '標本の詳細' : el.closest('.top') ? 'ヘッダー' : el.closest('.hero') ? 'ヒーロー' : el.closest('.empty') ? '検索0件' : el.closest('#mine') ? 'あなたの依頼' : el.closest('#price') ? '料金' : 'その他';
+  function openReq(ref, from) {
+    T.ev('req_open', placeOf(from));
     if (plate.open) plate.close();
     show(form); msg.hidden = true; openedAt = Date.now();
     if (ref != null) $('f-ref').value = ref;
@@ -237,8 +307,8 @@
     setTimeout(() => $('f-name').focus(), 30);
   }
   document.addEventListener('click', (e) => {
-    if (e.target.closest('[data-open-req]')) return openReq(null);
-    const r = e.target.closest('[data-ref]'); if (r) return openReq(r.dataset.ref);
+    const o = e.target.closest('[data-open-req]'); if (o) return openReq(null, o);
+    const r = e.target.closest('[data-ref]'); if (r) return openReq(r.dataset.ref, r);
     const c = e.target.closest('[data-close]'); if (c) { const d = c.closest('dialog'); if (d) d.close(); }
     const g = e.target.closest('[data-goto]'); if (g) { const t = $(g.dataset.goto); if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); }
   });
@@ -269,11 +339,11 @@
       // text/plain で送ると、GASへの送信で事前確認（CORS）が発生しない
       const res = await fetch(CFG.gasUrl, { method: 'POST', body: JSON.stringify(d) });
       const body = await res.json().catch(() => ({}));
-      if (body.ok && body.id) { saveMine([...loadMine(), body.id]); form.reset(); show($('doneView')); drawMine(); }
+      if (body.ok && body.id) { T.ev('req_submit', d.plan, 1); saveMine([...loadMine(), body.id]); form.reset(); show($('doneView')); drawMine(); }
       else if (body.error === 'invalid') { msg.textContent = body.message || '入力内容を確認してください。'; msg.hidden = false; }
       else if (body.error === 'busy') { msg.textContent = '送信が集中しています。1分ほどおいて、もう一度「依頼を送る」を押してください。'; msg.hidden = false; }
-      else offline(d);
-    } catch (err) { offline(d); }
+      else { T.ev('req_submit', d.plan, 0); offline(d); }
+    } catch (err) { T.ev('req_submit', d.plan, 0); offline(d); }
     finally { sendBtn.disabled = false; sendBtn.textContent = '依頼を送る'; }
   });
   $('copyBtn').addEventListener('click', () => {

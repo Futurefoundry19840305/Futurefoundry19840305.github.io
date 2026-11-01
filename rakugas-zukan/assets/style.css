@@ -365,3 +365,4 @@ fieldset.field{border:0;margin:0;padding:0}
 .foot{border-top:2px solid var(--ink);background:var(--sheet);padding-block:28px 40px}
 .foot .wrap{display:flex;gap:16px 32px;flex-wrap:wrap;justify-content:space-between;font-size:13px;color:var(--ink-2)}
 .foot .logo{font-size:17px;color:var(--ink)}
+.foot .privacy{flex-basis:100%;font-size:12px}

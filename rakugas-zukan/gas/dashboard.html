@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Dela+Gothic+One&display=swap">
+<style>
+/* ラクガス図鑑 ダッシュボード — サイトと同じ「方眼ノート×標本ラベル」の見た目 */
+:root{
+  --paper:#edf2f0; --grid:#dfe7e3; --sheet:#ffffff; --sheet-2:#f6f9f8;
+  --ink:#1a2747; --ink-2:#4d5b75; --rule:#c6d1cc; --rule-2:#e2e9e6;
+  --leaf:#17784a; --leaf-soft:#d9eee2; --shu:#c63d28; --marker:#f2e45c; --sky:#2d5fc4;
+  --good:#17784a; --warn:#b7791f; --bad:#c63d28;
+  --f-display:"Dela Gothic One","Hiragino Sans",sans-serif;
+  --f-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#11191d; --grid:#18232a; --sheet:#172227; --sheet-2:#1c2a30;
+  --ink:#e6edf1; --ink-2:#9db0ba; --rule:#2d3d44; --rule-2:#223036;
+  --leaf:#3fbf7c; --leaf-soft:#173a28; --shu:#ff6b52; --marker:#6b6420; --sky:#6b95f0;
+  --good:#3fbf7c; --warn:#e0ad35; --bad:#ff6b52; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--f-body);font-size:15px;line-height:1.7;color:var(--ink);background:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px 48px}
+header.bar{background:var(--sheet);border-bottom:2px solid var(--ink);margin-bottom:24px}
+header.bar .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px}
+h1{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0}
+h1 small{font-family:var(--f-body);font-weight:700;font-size:13px;color:var(--ink-2);margin-left:10px}
+.periods{display:flex;gap:4px;margin-left:auto}
+.periods button{font:inherit;font-weight:700;font-size:13.5px;padding:6px 14px;border:1.5px solid var(--ink);background:var(--sheet);color:var(--ink);border-radius:4px;cursor:pointer}
+.periods button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.periods button:focus-visible,a:focus-visible{outline:3px solid var(--leaf);outline-offset:2px}
+.meta{font-size:12.5px;color:var(--ink-2);width:100%;display:flex;gap:16px;flex-wrap:wrap}
+.meta a{color:var(--leaf);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.panel{background:var(--sheet);border:1.5px solid var(--ink);border-radius:4px;padding:16px 18px;min-width:0;display:grid;gap:10px;align-content:start}
+.panel h2{margin:0;font-size:15px;display:flex;align-items:center;gap:8px}
+.panel h2::before{content:"";width:10px;height:10px;background:var(--leaf);border-radius:2px}
+.panel .hint{margin:0;font-size:12.5px;color:var(--ink-2)}
+.s12{grid-column:span 12}.s8{grid-column:span 8}.s6{grid-column:span 6}.s4{grid-column:span 4}
+@media (max-width:980px){.s8,.s6,.s4{grid-column:span 12}}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;background:var(--sheet);border:2px solid var(--ink);border-radius:4px;box-shadow:4px 4px 0 var(--ink)}
+.kpi{padding:14px 16px;border-right:1.5px solid var(--rule);display:grid;gap:2px;min-width:0}
+.kpi:last-child{border-right:0}
+.kpi .k{font-size:12.5px;color:var(--ink-2);font-weight:700}
+.kpi .v{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi .v small{font-family:var(--f-body);font-size:14px;font-weight:700;margin-left:2px}
+.kpi .d{font-size:12px;color:var(--ink-2)}
+.kpi.main .v{color:var(--leaf)}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpi:nth-child(3n){border-right:0}.kpi:nth-child(-n+3){border-bottom:1.5px solid var(--rule)}}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-right:1.5px solid var(--rule)!important;border-bottom:1.5px solid var(--rule)}.kpi:nth-child(2n){border-right:0!important}}
+/* グラフ */
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--ink-2);font-size:11px;font-family:var(--f-body)}
+.legend{display:flex;gap:16px;font-size:12.5px;color:var(--ink-2);flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+/* 横棒リスト */
+.bars{display:grid;gap:7px;margin:0;padding:0;list-style:none}
+.bars li{display:grid;grid-template-columns:minmax(0,1fr) 3.5em;gap:10px;align-items:center;font-size:13.5px}
+.bars .lab{position:relative;min-width:0;padding:3px 8px;z-index:0}
+.bars .lab span{position:relative;z-index:1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bars .lab i{position:absolute;left:0;top:0;bottom:0;background:var(--leaf-soft);border-left:3px solid var(--leaf);border-radius:0 3px 3px 0;z-index:0}
+.bars .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.bars.warn .lab i{background:color-mix(in srgb,var(--shu) 14%,transparent);border-left-color:var(--shu)}
+.empty{font-size:13px;color:var(--ink-2);margin:0;padding:10px;border:1px dashed var(--rule);border-radius:4px;text-align:center}
+/* ファネル */
+.funnel{display:grid;gap:8px}
+.step{display:grid;grid-template-columns:10.5em minmax(0,1fr) 4.5em;gap:10px;align-items:center;font-size:13.5px}
+.step .track{height:26px;background:var(--rule-2);border-radius:3px;overflow:hidden}
+.step .fill{height:100%;background:var(--ink);border-radius:3px}
+.step:last-child .fill{background:var(--leaf)}
+.step .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.drop{font-size:12px;color:var(--ink-2);padding-left:calc(10.5em + 10px)}
+.drop b{color:var(--ink)}
+@media (max-width:560px){.step{grid-template-columns:minmax(0,1fr) 3.5em;gap:2px 10px}.step>span:first-child{grid-column:1/-1;font-weight:700}.drop{padding-left:0}}
+/* 依頼 */
+.status{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;gap:8px;align-items:baseline;padding:6px 12px;border:1.5px solid var(--ink);border-radius:4px;font-size:13px;font-weight:700}
+.chip b{font-family:var(--f-display);font-weight:400;font-size:20px}
+.chip.c1{background:var(--marker);color:var(--ink)}.chip.c3{background:var(--leaf);color:#fff}
+.reqs{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.reqs li{border:1px solid var(--rule);border-radius:4px;padding:8px 10px;background:var(--sheet-2);display:grid;gap:2px;font-size:13px;min-width:0}
+.reqs .h{display:flex;justify-content:space-between;gap:8px;color:var(--ink-2);font-size:12px}
+.reqs .w{overflow-wrap:anywhere}
+.st{font-weight:700;color:var(--ink)}
+.note{font-size:12.5px;color:var(--ink-2);margin:24px 0 0}
+.alert{margin:0 0 16px;padding:10px 14px;border:1.5px solid var(--shu);background:var(--sheet);border-radius:4px;font-size:13.5px}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <h1>ラクガス図鑑<small>管理者ダッシュボード</small></h1>
+    <div class="periods" role="group" aria-label="集計期間">
+      <button type="button" data-days="7">7日</button>
+      <button type="button" data-days="30" aria-pressed="true">30日</button>
+      <button type="button" data-days="90">90日</button>
+    </div>
+    <div class="meta"><span id="gen"></span><a id="sheetLink" href="#">依頼一覧・ログのスプレッドシートを開く</a><a id="siteLink" href="#">サイトを開く</a></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="alert" id="alert" hidden></p>
+  <section class="kpis" id="kpis" aria-label="主な数字"></section>
+
+  <div class="grid" style="margin-top:20px">
+    <section class="panel s12">
+      <h2>日別の訪問</h2>
+      <div class="legend"><span><i style="background:var(--leaf)"></i>訪問者</span><span><i style="background:var(--sky)"></i>ページビュー</span></div>
+      <div id="daily"></div>
+    </section>
+
+    <section class="panel s6">
+      <h2>依頼までの流れ</h2>
+      <p class="hint">セッション（1回の訪問）ごとに、どこまで進んだかを数えています。</p>
+      <div class="funnel" id="funnel"></div>
+    </section>
+
+    <section class="panel s6">
+      <h2>依頼の状況</h2>
+      <div class="status" id="status"></div>
+      <ul class="reqs" id="recent"></ul>
+    </section>
+
+    <section class="panel s4">
+      <h2>よく開かれた標本</h2>
+      <ol class="bars" id="specimens"></ol>
+    </section>
+    <section class="panel s4">
+      <h2>見つからなかった検索</h2>
+      <p class="hint">結果が0件だった言葉です。新しい標本や依頼の種になります。</p>
+      <ol class="bars warn" id="noHit"></ol>
+    </section>
+    <section class="panel s4">
+      <h2>よく検索された言葉</h2>
+      <ol class="bars" id="searches"></ol>
+    </section>
+
+    <section class="panel s4">
+      <h2>どこから来たか</h2>
+      <p class="hint">noteなどに載せるリンクの末尾に <code>?utm_source=note</code> を付けると、ここで分けて数えられます。</p>
+      <ol class="bars" id="refs"></ol>
+    </section>
+    <section class="panel s4">
+      <h2>依頼ボタンが押された場所</h2>
+      <ol class="bars" id="reqFrom"></ol>
+    </section>
+    <section class="panel s4">
+      <h2>観察窓で選ばれた場面</h2>
+      <ol class="bars" id="scenes"></ol>
+    </section>
+
+    <section class="panel s4">
+      <h2>端末</h2>
+      <ol class="bars" id="devices"></ol>
+    </section>
+    <section class="panel s4">
+      <h2>どこまで読まれたか</h2>
+      <p class="hint">ページの何%までスクロールしたセッションの割合です。</p>
+      <ol class="bars" id="scroll"></ol>
+    </section>
+    <section class="panel s4">
+      <h2>よく使われた絞り込み</h2>
+      <ol class="bars" id="filters"></ol>
+    </section>
+  </div>
+  <p class="note">訪問者は、ブラウザごとのランダムなIDで数えています。個人は特定していません。自分のアクセスを数えないようにするには、自分のブラウザで一度サイトを <code>?notrack=1</code> を付けて開いてください。</p>
+</main>
+
+<script>
+const DATA = <?!= payload ?>;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = (n) => Number(n || 0).toLocaleString('ja-JP');
+const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
+const mmss = (s) => (s >= 60 ? `${Math.floor(s / 60)}<small>分</small>${s % 60}<small>秒</small>` : `${s}<small>秒</small>`);
+
+$('gen').textContent = `更新：${DATA.generated}（再読み込みで最新になります）`;
+$('sheetLink').href = DATA.sheetUrl;
+if (DATA.siteUrl) $('siteLink').href = DATA.siteUrl; else $('siteLink').hidden = true;
+
+function bars(el, rows, opt = {}) {
+  const box = $(el);
+  if (!rows || !rows.length) { box.innerHTML = `<li class="empty" style="display:block">${opt.empty || 'まだ記録がありません'}</li>`; return; }
+  const max = Math.max(...rows.map((r) => r[1])) || 1;
+  box.innerHTML = rows.map((r) => `<li><span class="lab"><i style="width:${Math.max(2, (r[1] / max) * 100)}%"></i><span title="${esc(r[0])}">${esc(r[0])}</span></span><span class="n">${opt.fmt ? opt.fmt(r[1]) : num(r[1])}</span></li>`).join('');
+}
+
+function lineChart(el, daily) {
+  const W = Math.max(300, Math.round($(el).clientWidth || 1100)), H = W < 600 ? 200 : 240, L = 36, R = 14, T = 16, B = 28;
+  const xs = daily.map((d) => d[0]);
+  const s1 = daily.map((d) => d[1]), s2 = daily.map((d) => d[3]);
+  const maxV = Math.max(4, ...s1, ...s2);
+  const rough = maxV / 4, mag = Math.pow(10, Math.floor(Math.log10(rough))), norm = rough / mag;
+  const step = Math.max(1, (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag);
+  const top = Math.ceil(maxV / step) * step;
+  const x = (i) => L + (xs.length === 1 ? (W - L - R) / 2 : (i * (W - L - R)) / (xs.length - 1));
+  const y = (v) => T + (H - T - B) * (1 - v / top);
+  let g = '';
+  for (let v = 0; v <= top + 1e-9; v += step) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--rule-2)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${num(v)}</text>`;
+  const every = Math.max(1, Math.ceil(xs.length / Math.max(3, Math.floor(W / 120))));
+  xs.forEach((d, i) => { const lastI = xs.length - 1; if ((i % every === 0 && lastI - i >= every * 0.6) || i === lastI) g += `<text x="${x(i)}" y="${H - 8}" text-anchor="${i === 0 ? 'start' : i === lastI ? 'end' : 'middle'}">${d.slice(5).replace('-', '/')}</text>`; });
+  const path = (s) => s.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+  const area = `${path(s1)}L${x(s1.length - 1)},${y(0)}L${x(0)},${y(0)}Z`;
+  const last = s1.length - 1;
+  $(el).innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="日別の訪問者数とページビュー">
+    ${g}
+    <path d="${area}" fill="var(--leaf)" opacity=".12"/>
+    <path d="${path(s2)}" fill="none" stroke="var(--sky)" stroke-width="2" stroke-dasharray="5 4"/>
+    <path d="${path(s1)}" fill="none" stroke="var(--leaf)" stroke-width="2.5"/>
+    <circle cx="${x(last)}" cy="${y(s1[last])}" r="4.5" fill="var(--leaf)" stroke="var(--sheet)" stroke-width="2"/>
+    <text x="${x(last) - 8}" y="${y(s1[last]) - 12}" text-anchor="end" style="fill:var(--ink);font-weight:700">${num(s1[last])}人</text>
+  </svg>`;
+}
+
+function render(days) {
+  cur = days;
+  const P = DATA.periods[days];
+  document.querySelectorAll('.periods button').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.days === days)));
+  const k = P.kpi;
+  const rate = pct(k.reqSubmit, k.sessions);
+  $('kpis').innerHTML = [
+    ['訪問者', num(k.visitors) + '<small>人</small>', `${days}日間・ブラウザ単位`],
+    ['セッション', num(k.sessions) + '<small>回</small>', '訪問の回数'],
+    ['ページビュー', num(k.pageviews), '表示された回数'],
+    ['平均滞在', mmss(k.avgStay), '画面が見えていた時間'],
+    ['依頼フォームを開いた', num(k.reqOpen) + '<small>回</small>', `セッションの ${pct(k.reqOpen, k.sessions)}%`],
+    ['依頼の送信', num(k.requests) + '<small>件</small>', `サイトからの送信率 ${rate}%`, 1],
+  ].map((r) => `<div class="kpi${r[3] ? ' main' : ''}"><span class="k">${r[0]}</span><span class="v">${r[1]}</span><span class="d">${r[2]}</span></div>`).join('');
+
+  lineChart('daily', P.daily);
+
+  const f = P.funnel, base = f[0][1] || 1;
+  $('funnel').innerHTML = f.map((s, i) => {
+    const prev = i ? f[i - 1][1] : 0;
+    const drop = i ? `<div class="drop">前の段階から <b>${pct(s[1], prev)}%</b> が進みました</div>` : '';
+    return `${drop}<div class="step"><span>${esc(s[0])}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(1, (s[1] / base) * 100)}%"></span></span><span class="n">${num(s[1])}</span></div>`;
+  }).join('');
+
+  const st = P.status;
+  $('status').innerHTML = `<span class="chip c1">受付 <b>${num(st['受付'])}</b></span><span class="chip">対応中 <b>${num(st['対応中'])}</b></span><span class="chip c3">完了 <b>${num(st['完了'])}</b></span>`;
+
+  bars('specimens', P.specimens, { empty: '標本はまだ開かれていません' });
+  bars('noHit', P.noHit, { empty: '見つからなかった検索はありません' });
+  bars('searches', P.searches, { empty: '検索はまだありません' });
+  bars('refs', P.refs);
+  bars('reqFrom', P.reqFrom, { empty: '依頼ボタンはまだ押されていません' });
+  bars('scenes', P.scenes);
+  bars('devices', P.devices);
+  bars('scroll', P.scroll.map((r) => [r[0] + ' まで', r[1]]), { fmt: (n) => pct(n, P.scrollBase) + '%' });
+  bars('filters', P.filters);
+
+  const alert = $('alert');
+  if (P.submitFail) { alert.hidden = false; alert.textContent = `依頼の送信に失敗した記録が ${P.submitFail} 件あります。GASの「実行数」画面でエラーを確認してください。`; }
+  else alert.hidden = true;
+}
+
+$('recent').innerHTML = DATA.recent.length ? DATA.recent.map((r) => `<li><div class="h"><span>${esc(r.date)}　${esc(r.name)} 様　${esc(r.plan)}</span><span class="st">${esc(r.status)}</span></div><div class="w">${esc(r.want)}</div></li>`).join('') : '<li class="empty" style="display:block">まだ依頼はありません</li>';
+
+document.querySelector('.periods').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) render(+b.dataset.days); });
+let cur = 30;
+render(cur);
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => lineChart('daily', DATA.periods[cur].daily), 150); });
+</script>
+</body>
+</html>
