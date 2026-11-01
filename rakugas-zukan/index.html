@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ラクガス図鑑｜Googleの面倒を、GASでラクにする</title>
+<meta name="description" content="Google Apps Script（GAS）でできる自動化を44種の標本として紹介。図解・動くデモ・コード例つき。作成のご依頼は3,000円から。">
+<meta property="og:title" content="ラクガス図鑑">
+<meta property="og:description" content="Googleの面倒を、GASでラクにする44の方法。動くデモとコード例つき。">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#1a2747">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2317784a'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3Cpath d='M16 5v4M16 23v4M5 16h4M23 16h4M8.2 8.2l2.8 2.8M21 21l2.8 2.8M8.2 23.8l2.8-2.8M21 11l2.8-2.8' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic&family=BIZ+UDPGothic:wght@400;700&family=Dela+Gothic+One&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="ラクガス図鑑 トップへ"><span class="logo-mark" data-i="gear"></span>ラクガス図鑑</a>
+    <nav class="nav" aria-label="ページ内の移動">
+      <a class="nav-link" href="#zukan">図鑑</a>
+      <a class="nav-link" href="#anatomy">しくみ</a>
+      <a class="nav-link" href="#price">料金</a>
+      <a class="nav-link" href="#guide">はじめ方</a>
+      <button class="btn primary small" type="button" data-open-req>作成を依頼する</button>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ヒーロー：表紙と観察窓 -->
+  <section class="hero" aria-labelledby="ttl">
+    <div class="wrap">
+      <div class="cover">
+        <h1 class="spine" id="ttl">ラクガス図鑑</h1>
+        <div class="cover-body">
+          <p class="catch">Googleの<wbr><mark>めんどう</mark>を、<br>GASで<wbr>ラクにする。</p>
+          <p class="lead">スプレッドシート、Gmail、カレンダー。毎日の手作業を自動で片づける方法を、44種の標本として集めました。気に入ったものは、そのまま作成を依頼できます。</p>
+          <dl class="facts">
+            <div><dt>収録</dt><dd>44種</dd></div>
+            <div><dt>生息地</dt><dd>10か所</dd></div>
+            <div><dt>作成依頼</dt><dd>3,000円〜</dd></div>
+          </dl>
+          <div class="hero-actions">
+            <a class="btn primary" href="#zukan"><span data-i="search"></span>図鑑をひらく</a>
+            <button class="btn" type="button" data-open-req><span data-i="send"></span>作成を依頼する</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="theater" id="theater" aria-label="自動化の観察窓">
+        <div class="th-bar"><span class="th-rec" aria-hidden="true"></span><span>観察中：<strong id="thTitle">経費をまとめる</strong></span></div>
+        <div class="th-tabs" id="thTabs" role="tablist" aria-label="観察する場面"></div>
+        <div class="th-stage" id="thStage">
+          <div class="th-col"><div class="th-label" id="thInLabel"></div><div id="thTrig"></div><div id="thIn" style="display:grid;gap:6px"></div></div>
+          <div class="th-core"><svg class="ic th-gear" id="thGear" viewBox="0 0 24 24" aria-hidden="true"></svg><div style="display:grid;gap:6px;justify-items:center"><div class="th-status" id="thStatus" aria-live="polite"></div><div class="th-prog"><i id="thProg"></i></div></div></div>
+          <div class="th-col"><div class="th-label" id="thOutLabel"></div><div id="thOut" style="display:grid;gap:6px"></div></div>
+        </div>
+        <div class="th-foot">
+          <div class="cmp man"><span>手作業</span><span class="cmp-bar"><i id="cmpMan"></i></span><span id="cmpManT"></span></div>
+          <div class="cmp gas"><span><b>GAS</b></span><span class="cmp-bar"><i id="cmpGas"></i></span><span id="cmpGasT"></span></div>
+          <div class="th-save">
+            <p><b id="cmpSave"></b><small id="cmpNote"></small></p>
+            <div class="acts"><button class="btn small" type="button" id="thReplay">もう一度見る</button><button class="btn primary small" type="button" id="thAsk" data-ref="">これを依頼する</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- しくみ -->
+  <section class="sec" id="anatomy" aria-labelledby="h-anatomy">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-anatomy"><span class="tab" aria-hidden="true"></span>自動化のからだのつくり</h2>
+        <p>図鑑に載っている標本は、どれも「きっかけ」「GASのしごと」「けっか」の3つでできています。</p>
+      </div>
+      <div class="anatomy">
+        <div class="organ"><h3><span class="num">1</span>きっかけ</h3><ul>
+          <li><span data-i="tap"></span>実行ボタンを押す</li>
+          <li><span data-i="clock"></span>決まった時間になる</li>
+          <li><span data-i="edit"></span>シートが編集される</li>
+          <li><span data-i="send"></span>フォームが送信される</li>
+        </ul></div>
+        <div class="vein" aria-hidden="true">▶</div>
+        <div class="organ core"><span data-i="gear"></span><h3><span class="num">2</span>GASのしごと</h3><p>書いておいた手順どおりに、<br>読んで・まとめて・送る</p></div>
+        <div class="vein" aria-hidden="true">▶</div>
+        <div class="organ"><h3><span class="num">3</span>けっか</h3><ul>
+          <li><span data-i="sheet"></span>シートに書き込む</li>
+          <li><span data-i="mail"></span>メールを送る</li>
+          <li><span data-i="cal"></span>予定を登録する</li>
+          <li><span data-i="doc"></span>書類・PDFを作る</li>
+          <li><span data-i="chat"></span>LINE・チャットに通知</li>
+        </ul></div>
+      </div>
+      <p class="example">たとえば「毎朝8時になったら（きっかけ）、カレンダーを読んで（GASのしごと）、今日の予定をメールで届ける（けっか）」。図鑑の標本にも、この流れを小さな図で載せています。</p>
+    </div>
+  </section>
+
+  <!-- 図鑑本編 -->
+  <section class="sec" id="zukan" aria-labelledby="h-zukan" style="padding-top:24px">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-zukan"><span class="tab" aria-hidden="true"></span>44種の標本</h2>
+        <p>生息地（使うサービス）や、やりたいことの言葉で探せます。標本を選ぶと、使いどころとコード例が開きます。</p>
+      </div>
+      <div class="finder">
+        <label class="search"><span class="sr">やりたいことで探す</span><span data-i="search"></span><input id="q" type="search" placeholder="やりたいことで探す（例：メール、PDF、毎日）" autocomplete="off"></label>
+        <div class="habitats" id="habitats" role="group" aria-label="生息地で絞り込む"></div>
+        <p class="count" id="count" aria-live="polite"></p>
+      </div>
+      <p class="caution"><span data-i="warn"></span><span>コードは見本です。シート名や「〜ID」を自分のものに書き換え、テスト用のデータで試してから使ってください。<button class="link" type="button" data-goto="cautions">使う前に知っておきたいこと</button></span></p>
+      <div class="specimens" id="specimens"></div>
+    </div>
+  </section>
+
+  <!-- 料金 -->
+  <section class="sec" id="price" aria-labelledby="h-price">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-price"><span class="tab" aria-hidden="true"></span>作成依頼の料金</h2>
+        <p>ご依頼の内容を確認して、お見積りをお伝えします。むずかしさと作業の量に応じて金額が決まります。</p>
+      </div>
+      <div class="menu">
+        <div class="menu-row main"><div class="menu-name">レベル1　かんたん</div><div class="menu-price">3,000<small>円〜</small></div>
+          <p class="menu-desc"><span class="lv" aria-label="難しさ1"><i class="on"></i><i></i><i></i></span>図鑑の標本をもとに、あなたのシートやメールに合わせて作ります。表の集計、フォームへの自動返信、毎日のバックアップなど、1つの作業の自動化。</p></div>
+        <div class="menu-row"><div class="menu-name">レベル2・3　ふつう〜ちょい難</div><div class="menu-price">お見積り</div>
+          <p class="menu-desc"><span class="lv" aria-label="難しさ2から3"><i class="on"></i><i class="on"></i><i class="on"></i></span>PDFを作ってメールで送る、LINEに通知する、Webアプリを作るなど、いくつかのサービスを組み合わせる自動化。</p></div>
+        <div class="menu-row"><div class="menu-name">継続サポート・業務改善</div><div class="menu-price">要相談</div>
+          <p class="menu-desc">作ったあとの修正や機能追加、運用中のトラブル対応、手作業の洗い出しから自動化の計画づくりまで。続けてのお手伝いはご相談ください。</p></div>
+      </div>
+      <ol class="steps" aria-label="ご依頼の流れ">
+        <li>依頼フォームから送信<span>わかる範囲で書けば大丈夫です</span></li>
+        <li>内容の確認・お見積り<span>連絡先にご返信します</span></li>
+        <li>作成<span>あなたの環境に合わせて作ります</span></li>
+        <li>動作確認してお渡し<span>使い方もお伝えします</span></li>
+      </ol>
+      <p class="price-note">金額はめやすです。ご依頼の内容によって変わります。</p>
+      <div class="price-cta"><button class="btn primary" type="button" data-open-req><span data-i="send"></span>作成を依頼する</button></div>
+
+      <div class="mine" id="mine" style="margin-top:40px">
+        <div class="mine-head"><h3>あなたの依頼</h3><button class="btn small" type="button" data-open-req>新しく依頼する</button></div>
+        <p class="muted">このブラウザから送った依頼と、その進み具合が表示されます。</p>
+        <div class="reqs" id="reqs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- はじめ方・注意 -->
+  <section class="sec" id="guide" aria-labelledby="h-guide">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-guide"><span class="tab" aria-hidden="true"></span>自分で試すなら</h2>
+        <p>標本のコードは、Googleスプレッドシートから3分ほどで試せます。</p>
+      </div>
+      <div class="guide">
+        <div class="howto">
+          <h3>はじめ方</h3>
+          <div class="mock" role="img" aria-label="スプレッドシートの拡張機能メニューからApps Scriptを開いた画面のイメージ">
+            <div class="mock-bar"><i></i><i></i><i></i>&nbsp;無題のスプレッドシート</div>
+            <div class="mock-menu"><span>ファイル</span><span>編集</span><span>表示</span><b>拡張機能 ▸ Apps Script</b><span class="pin">2</span></div>
+            <div class="mock-ed">
+              <div class="mock-side"><span data-i="doc"></span><span class="on" data-i="clock"></span><span class="pin">5</span></div>
+              <div class="mock-code"><div class="mock-btns"><span>保存</span><span class="pin">3</span><span class="run">▶ 実行</span><span class="pin">4</span></div>
+<pre>function myFunction() {
+  // ここに標本のコードを貼り付け
+}</pre></div>
+            </div>
+          </div>
+          <ol>
+            <li><span>Googleスプレッドシートを開く</span></li>
+            <li><span>メニューの「拡張機能」→「Apps Script」を選ぶ</span></li>
+            <li><span>標本のコードを貼り付けて保存する（<kbd>Ctrl</kbd>＋<kbd>S</kbd>）</span></li>
+            <li><span>「実行」を押す（初回だけ許可の確認が出ます）</span></li>
+            <li><span>自動で動かすなら、左の時計マーク「トリガー」で時間を設定する</span></li>
+          </ol>
+        </div>
+
+        <div class="cautions" id="cautions">
+          <h3>使う前に知っておきたいこと</h3>
+          <details class="key" open><summary><span data-i="warn"></span>コードはそのままでは動かないことがあります</summary><div>
+            <p>標本のコードは「こういうことができる」を示す見本です。次の理由で、エラーになったり思いどおりに動かなかったりします。</p>
+            <ul>
+              <li>「フォルダID」「シートID」やメールアドレスを、自分のものに書き換えていない</li>
+              <li>シート名・列の並び・見出し行の有無が、コードの前提と違う</li>
+              <li>日付が文字として入っている、空の行があるなど、データの形が違う</li>
+              <li>会社のGoogle Workspaceで、管理者がGASや外部への接続を制限している</li>
+              <li>Googleや外部サービス（LINE、天気APIなど）の仕様が変わった</li>
+            </ul>
+            <p>エラーが出たら、画面下の「実行ログ」のメッセージで検索するか、作成をご依頼ください。</p>
+          </div></details>
+          <details><summary><span data-i="warn"></span>まずはテスト用のコピーで試す</summary><div><p>本番のデータでいきなり実行しないでください。上書きや削除は「元に戻す」が効かないことがあります。ファイルをコピーして、そちらで動きを確かめましょう。</p></div></details>
+          <details><summary><span data-i="mail"></span>メールは自分宛てで試す</summary><div><p>一斉送信などは、まず宛先を全部自分にして文面を確認してください。送ったメールは取り消せません。不安なら「下書きをまとめて作成」の標本が安心です。</p></div></details>
+          <details><summary><span data-i="lock"></span>初回の「承認」画面について</summary><div><p>初めて実行すると「このアプリはGoogleで確認されていません」と表示されることがあります。自分で貼り付けたコードなら「詳細」から進めば実行できます。中身のわからないコードは許可しないでください。メールやファイルを読む権限を渡すことになります。</p></div></details>
+          <details><summary><span data-i="lock"></span>パスワードや鍵をコードに書かない</summary><div><p>LINEのアクセストークンやWebhookのURLは、「プロジェクトの設定」→「スクリプト プロパティ」に保存します。</p><pre>const token = PropertiesService
+  .getScriptProperties().getProperty('LINE_TOKEN');</pre></div></details>
+          <details><summary><span data-i="clock"></span>自動実行の落とし穴</summary><div><ul>
+            <li>時間指定のトリガーは「8時〜9時の間」のように幅があり、ちょうどの時刻には動きません。</li>
+            <li>名前だけで動く <code>onEdit</code> では、メール送信など許可が必要な処理はできません。「トリガー」画面から設定します。</li>
+            <li><code>onEdit</code> は人が手で編集したときだけ動きます。数式の再計算や別のスクリプトによる変更では動きません。</li>
+            <li>トリガーを作るコードを何度も実行すると、同じトリガーが増えて二重に動きます。</li>
+          </ul></div></details>
+          <details><summary><span data-i="clock"></span>タイムゾーンと引き継ぎ</summary><div><p>「プロジェクトの設定」でタイムゾーンが「(GMT+09:00) 東京」か確認してください。また、トリガーは設定した人のアカウントで動くため、退職やアカウント削除で止まります。誰が何を設定したか記録しておきましょう。</p></div></details>
+          <details><summary><span data-i="chart"></span>使える量には上限があります</summary><div>
+            <p>無料のGoogleアカウントとGoogle Workspaceで上限が違います。超えるとその日はエラーになります。</p>
+            <div class="tbl"><table>
+              <thead><tr><th>項目</th><th>無料アカウント</th><th>Google Workspace</th></tr></thead>
+              <tbody>
+                <tr><td>1日に送れるメールの宛先数</td><td>100件</td><td>1,500件</td></tr>
+                <tr><td>1回の実行時間</td><td>6分</td><td>6分</td></tr>
+                <tr><td>トリガーの合計実行時間（1日）</td><td>90分</td><td>6時間</td></tr>
+                <tr><td>外部サイトへのアクセス（1日）</td><td>20,000回</td><td>100,000回</td></tr>
+                <tr><td>自作関数の実行時間</td><td>30秒</td><td>30秒</td></tr>
+                <tr><td>1つのスクリプトのトリガー数</td><td>20個</td><td>20個</td></tr>
+              </tbody></table></div>
+            <p class="muted">2026年10月時点のGoogle公式ページの値です。<a href="https://developers.google.com/apps-script/guides/services/quotas" target="_blank" rel="noopener">最新の値を確認する</a></p>
+          </div></details>
+          <details><summary><span data-i="lock"></span>個人情報と利用規約</summary><div><p>顧客の名前やアドレスを扱うときは、会社のルールや個人情報の扱いに従ってください。外部サイトの情報を取り込むときは、そのサイトの利用規約で許されているか確認しましょう。</p></div></details>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <a class="logo" href="#top"><span class="logo-mark" data-i="gear"></span>ラクガス図鑑</a>
+    <span>コード例は見本です。ご利用は自己責任でお願いします。</span>
+  </div>
+</footer>
+
+<!-- 標本の詳細 -->
+<dialog id="plate" aria-labelledby="plateTitle">
+  <div class="plate" id="plateInner"></div>
+</dialog>
+
+<!-- 依頼フォーム -->
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form class="form" id="reqForm" novalidate>
+    <h2 id="dlgTitle">GASの作成を依頼する</h2>
+    <p class="hint">わかる範囲で大丈夫です。内容を確認して、連絡先にご返信します。内容によっては、GASでは実現できないことや、別の方法のほうが向いていることもあります。その場合はご相談させてください。</p>
+    <div class="row2">
+      <div class="field"><label for="f-name">お名前<span class="must">必須</span></label><input id="f-name" name="name" autocomplete="name" placeholder="山田 太郎" required></div>
+      <div class="field"><label for="f-contact">連絡先<span class="must">必須</span></label><input id="f-contact" name="contact" autocomplete="email" placeholder="メールアドレスなど" required></div>
+    </div>
+    <fieldset class="field"><legend>使いたいサービス（いくつでも）</legend><div class="checks" id="f-svcs"></div></fieldset>
+    <div class="field"><label for="f-plan">ご希望の内容</label><select id="f-plan" name="plan"><option>単発の作成（3,000円〜）</option><option>継続サポート・業務改善の相談（要相談）</option><option>まずは相談だけしたい</option></select></div>
+    <p class="pricehint">料金は3,000円〜です。むずかしさや量に応じて、お見積りをお伝えします。継続サポートや業務改善はご相談ください。</p>
+    <div class="field"><label for="f-want">自動化したいこと<span class="must">必須</span></label><textarea id="f-want" name="want" required placeholder="例：毎月1日に、経費シートの先月分を集計して、PDFにして税理士さんにメールで送りたい"></textarea></div>
+    <div class="row2">
+      <div class="field"><label for="f-freq">動かしたい頻度</label><select id="f-freq" name="freq"><option>一度だけ</option><option>毎日</option><option>毎週</option><option>毎月</option><option>シート編集・フォーム送信のたび</option><option>わからない</option></select></div>
+      <div class="field"><label for="f-due">希望の時期</label><select id="f-due" name="due"><option>いつでも</option><option>今月中</option><option>2週間以内</option><option>急ぎ（1週間以内）</option></select></div>
+    </div>
+    <input class="hp" id="f-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="field"><label for="f-ref">参考にした標本（任意）</label><input id="f-ref" name="ref" placeholder="例：No.015 PDFに変換して保存・送信"></div>
+    <p class="msg err" id="formMsg" hidden></p>
+    <div class="actions"><button class="btn" type="button" data-close>閉じる</button><button class="btn primary" type="submit" id="sendBtn">依頼を送る</button></div>
+  </form>
+  <div class="form" id="doneView" hidden>
+    <h2>依頼を受け付けました</h2>
+    <p class="msg">ありがとうございます。内容を確認して、入力された連絡先にご返信します。進み具合は、このブラウザで「あなたの依頼」から確認できます。</p>
+    <div class="actions"><button class="btn primary" type="button" data-close>閉じる</button></div>
+  </div>
+  <div class="form" id="offView" hidden>
+    <h2>送信できませんでした</h2>
+    <p class="hint" id="offWhy">通信状態が悪いか、受付窓口に一時的につながらない可能性があります。少し時間をおいて、もう一度お試しください。</p>
+    <p class="hint">急ぎの場合は、下の依頼文をコピーしてメールなどで送ってください。</p>
+    <div class="copybox" id="copyText"></div>
+    <div class="actions"><button class="btn" type="button" id="copyBtn">依頼文をコピー</button><button class="btn primary" type="button" data-close>閉じる</button></div>
+  </div>
+</dialog>
+
+<script src="assets/config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
