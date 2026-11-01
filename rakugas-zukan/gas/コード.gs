@@ -27,6 +27,8 @@ const WON = ['契約', '継続依頼'];
 const COL = { date: 1, id: 2, status: 3, name: 4, contact: 5, plan: 6, want: 8, deal: 13, amount: 14, decided: 15 };
 // 単発の依頼に最初に入れておく金額（見積もりに合わせて書き換える）
 const DEFAULT_PRICE = 3000;
+// 記事のネタを毎朝書き出すGoogleドキュメント（「ラクガス図鑑 note下書き」フォルダ内・作成済み）
+const TOPICS_DOC_ID = '1DeaOWncaTYEvBv7VfKNAX-Ui5LszjHD0BypQefftIvE';
 
 // アクセスログ（サイトから届く匿名の記録）
 const LOG_SHEET = 'アクセスログ';
@@ -55,6 +57,11 @@ function setup() {
     r.setValues(r.getValues().map((v) => [v[0] === '' ? '未確定' : v[0]]));
   }
   logSheet_();
+  // 記事のネタを毎朝6時ごろに更新する（すでにあれば作らない）
+  if (!ScriptApp.getProjectTriggers().some((t) => t.getHandlerFunction() === 'updateTopics')) {
+    ScriptApp.newTrigger('updateTopics').timeBased().everyDays(1).atHour(6).create();
+  }
+  updateTopics();
   MailApp.sendEmail(notifyTo_(), '【ラクガス図鑑】受付窓口の準備ができました',
     'このメールが届いていれば、通知の設定は完了です。\n次は「デプロイ」→「新しいデプロイ」でウェブアプリとして公開してください。\n\n依頼一覧：' + SpreadsheetApp.openById(SHEET_ID).getUrl(),
     { name: 'ラクガス図鑑' });
@@ -243,7 +250,7 @@ function admin_() {
   // 最初の表示：直近30日・日ごと
   const to = ymd_(Date.now()), from = ymd_(Date.now() - 29 * DAY);
   const t = HtmlService.createTemplateFromFile('dashboard');
-  t.payload = JSON.stringify(dashboardQuery(from, to, 'day')).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, '');
+  t.payload = JSON.stringify(query_(from, to, 'day')).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, '');
   return t.evaluate().setTitle('ラクガス図鑑 ダッシュボード').addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
@@ -274,6 +281,10 @@ const planKey_ = (p) => { const s = String(p || '').replace(/^'/, ''); return /^
  */
 function dashboardQuery(from, to, unit) {
   if (!isAdmin_()) throw new Error('この操作は管理者だけができます。');
+  return query_(from, to, unit);
+}
+
+function query_(from, to, unit) {
   unit = ['day', 'week', 'month', 'year'].indexOf(unit) >= 0 ? unit : 'day';
   const fromTs = parseYmd_(from), toTs = parseYmd_(to) + DAY - 1;
   if (!isFinite(fromTs) || !isFinite(toTs) || fromTs > toTs) return { error: '期間の指定が正しくありません。開始日が終了日より前になるように選んでください。' };
@@ -392,4 +403,58 @@ function dashboardQuery(from, to, unit) {
     sheetUrl: SpreadsheetApp.openById(SHEET_ID).getUrl(),
     siteUrl: SITE_URL,
   };
+}
+
+
+/* =========================================================
+   記事のネタ（毎朝、Googleドキュメントに書き出す）
+   note下書きを作るルーティンが、このドキュメントを読んでテーマを選びます。
+   名前・連絡先は書き出しません。
+   ========================================================= */
+function updateTopics() {
+  const to = ymd_(Date.now()), from = ymd_(Date.now() - 29 * DAY);
+  const q = query_(from, to, 'week');
+  const A = q.access;
+  const list = (rows, unit) => (rows && rows.length ? rows.map((r) => '- ' + r[0] + '（' + r[1] + (unit || '回') + '）').join('\n') : '- （まだ記録がありません）');
+
+  // 依頼の「参考にした標本」と「自動化したいこと」（直近90日・名前と連絡先は除く）
+  const since = Date.now() - 90 * DAY;
+  const R = sheet_().getLastRow() > 1 ? sheet_().getRange(2, 1, sheet_().getLastRow() - 1, HEADERS.length).getValues() : [];
+  const refCount = {}, wantCount = {};
+  R.forEach((r) => {
+    if (!(r[0] instanceof Date) || r[0].getTime() < since) return;
+    const ref = String(r[10]).replace(/^'/, '').trim();
+    if (ref) refCount[ref] = (refCount[ref] || 0) + 1;
+    const w = String(r[COL.want - 1]).replace(/^'/, '').replace(/\s+/g, ' ').trim();
+    if (w) { const k = w.slice(0, 120); wantCount[k] = (wantCount[k] || 0) + 1; }
+  });
+  const wants = Object.keys(wantCount).sort((a, b) => wantCount[b] - wantCount[a]).slice(0, 20).map((k) => '- ' + k + (wantCount[k] > 1 ? '（' + wantCount[k] + '件）' : ''));
+  const refs = Object.keys(refCount).map((k) => [k, refCount[k]]).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+  const text = [
+    'ラクガス図鑑 記事のネタ（自動更新）',
+    '更新：' + q.generated + '　対象：' + from + '〜' + to + '（直近30日）',
+    '',
+    '■ 見つからなかった検索（結果0件。図鑑にない＝求められているテーマ）',
+    list(A.noHit),
+    '',
+    '■ よく検索された言葉',
+    list(A.searches),
+    '',
+    '■ よく開かれた標本',
+    list(A.specimens),
+    '',
+    '■ 依頼で「参考にした標本」（直近90日）',
+    list(refs, '件'),
+    '',
+    '■ 依頼で寄せられた「自動化したいこと」（直近90日・多い順に20件）',
+    wants.join('\n') || '- （まだ依頼はありません）',
+    '',
+    '■ 参考：どこから来たか',
+    list(A.refs),
+    '',
+    '■ 参考：アクセス',
+    '- 訪問者 ' + A.visitors + '人／セッション ' + A.sessions + '回／依頼 ' + q.deals.requests + '件',
+  ].join('\n');
+  DocumentApp.openById(TOPICS_DOC_ID).getBody().setText(text);
 }
