@@ -124,6 +124,27 @@ tr.zero td{color:var(--ink-2)}
 .drop b{color:var(--ink)}
 @media (max-width:560px){.step{grid-template-columns:minmax(0,1fr) 3.5em;gap:2px 10px}.step>span:first-child{grid-column:1/-1;font-weight:700}.drop{padding-left:0}}
 
+/* 導線（カスタマージャーニー） */
+.journey{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden}
+.jstep{padding:12px 12px 10px;border-right:1px solid var(--rule);display:grid;gap:4px;align-content:start;min-width:0;background:var(--sheet)}
+.jstep:last-child{border-right:0}
+.jstep .k{font-size:12px;color:var(--ink-2);font-weight:700;min-height:2.6em}
+.jstep .v{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums}
+.jstep .bar{height:6px;background:var(--rule-2);border-radius:3px;overflow:hidden}
+.jstep .bar i{display:block;height:100%;background:var(--leaf)}
+.jstep .r{font-size:12px;color:var(--ink-2)}
+.jstep .r b{color:var(--ink)}
+.jstep.weak{background:color-mix(in srgb,var(--shu) 8%,var(--sheet))}
+.jstep.weak .r b{color:var(--shu)}
+@media (max-width:980px){.journey{grid-template-columns:repeat(4,minmax(0,1fr))}.jstep:nth-child(4){border-right:0}.jstep:nth-child(-n+4){border-bottom:1px solid var(--rule)}}
+@media (max-width:560px){.journey{grid-template-columns:repeat(2,minmax(0,1fr))}.jstep{border-bottom:1px solid var(--rule)}.jstep:nth-child(2n){border-right:0}}
+/* 曜日×時間 */
+.heat{display:grid;grid-template-columns:2.2em repeat(24,minmax(0,1fr));gap:2px;font-size:10.5px;color:var(--ink-2);min-width:560px}
+.heat span{display:grid;place-items:center}
+.heat .c{height:22px;border-radius:2px;background:var(--leaf);opacity:var(--o,.06)}
+.heatwrap{overflow-x:auto}
+td.src{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+
 /* この期間の依頼 */
 .reqs{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .reqs li{border:1px solid var(--rule);border-left:5px solid var(--dc,var(--d-open));border-radius:4px;padding:8px 10px;background:var(--sheet-2);display:grid;gap:2px;font-size:13px;min-width:0}
@@ -142,6 +163,7 @@ code{font-size:12px;background:var(--sheet-2);padding:1px 5px;border-radius:3px}
     <div class="meta"><span id="gen"></span><a id="sheetLink" href="#">依頼一覧を開く（商談・金額の入力）</a><a id="siteLink" href="#">サイトを開く</a></div>
     <div class="tabs" role="tablist" aria-label="表示する画面">
       <button class="tab" type="button" role="tab" id="tab-sales" aria-controls="sec-sales" aria-selected="true">依頼と売上<span class="cnt" id="cntSales"></span></button>
+      <button class="tab" type="button" role="tab" id="tab-journey" aria-controls="sec-journey" aria-selected="false" tabindex="-1">集客と導線<span class="cnt" id="cntJourney"></span></button>
       <button class="tab" type="button" role="tab" id="tab-access" aria-controls="sec-access" aria-selected="false" tabindex="-1">アクセス<span class="cnt" id="cntAccess"></span></button>
     </div>
   </div>
@@ -198,6 +220,28 @@ code{font-size:12px;background:var(--sheet-2);padding:1px 5px;border-radius:3px}
       <section class="panel s5">
         <h3>この期間の依頼</h3>
         <ul class="reqs" id="recent"></ul>
+      </section>
+    </div>
+  </section>
+
+  <section id="sec-journey" role="tabpanel" aria-labelledby="tab-journey" hidden>
+    <div class="sec-h"><h2 class="sr">集客と導線</h2><p>知ってもらう → 訪れる → 比べる → 依頼する → 成約する、の流れを段階ごとに見ます。いちばん落ちている段階が、次に手を打つ場所です。</p></div>
+    <div class="grid">
+      <section class="panel s12">
+        <h3>カスタマージャーニー</h3>
+        <p class="hint">「次へ進んだ割合」がいちばん低い段階を赤く示しています。依頼・成約は依頼一覧の件数です。</p>
+        <div class="journey" id="journey"></div>
+      </section>
+      <section class="panel s12">
+        <h3>流入元・記事ごとの成果</h3>
+        <p class="hint">noteの記事リンクに <code>?utm_source=note&amp;utm_campaign=記事の名前</code> を付けると、記事ごとに分かれます。依頼は、依頼した人が最後に来た流入元で数えます。</p>
+        <div class="tbl" style="max-height:440px"><table id="srcTable"></table></div>
+      </section>
+      <section class="panel s12">
+        <h3>訪問が多い曜日と時間</h3>
+        <div class="seg" id="heatMode" role="group" aria-label="対象"><button type="button" data-h="all" aria-pressed="true">すべて</button><button type="button" data-h="note">note経由</button></div>
+        <p class="hint">セッションが始まった時刻（日本時間）です。noteに投稿する時間を決める手がかりにします。</p>
+        <div class="heatwrap"><div class="heat" id="heat"></div></div>
       </section>
     </div>
   </section>
@@ -389,6 +433,8 @@ function render() {
 
   $('cntSales').textContent = `依頼 ${num(D.requests)}・成約 ${num(D.won)}`;
   $('cntAccess').textContent = `訪問者 ${num(A.visitors)}`;
+  $('cntJourney').textContent = `依頼率 ${pct(D.requests, A.sessions)}%`;
+  renderJourney();
   kpis('kpiSales', [
     ['依頼', num(D.requests) + '<small>件</small>', `フォームを開いた ${num(A.reqOpen)}回`],
     ['成約', num(D.won) + '<small>件</small>', `契約 ${num(D.contract)}・継続依頼 ${num(D.repeat)}`],
@@ -444,8 +490,36 @@ function render() {
   if (A.submitFail) showError(`依頼の送信に失敗した記録が ${A.submitFail} 件あります。GASの「実行数」画面でエラーを確認してください。`);
 }
 
+/* ---------- 集客と導線 ---------- */
+let heatMode = 'all';
+function renderJourney() {
+  const J = DATA.journey || [], top = (J[0] && J[0][1]) || 0;
+  let weakest = -1, wr = 2;
+  J.forEach((s, i) => { if (i > 0 && i < 6 && J[i - 1][1] > 0) { const r = s[1] / J[i - 1][1]; if (r < wr) { wr = r; weakest = i; } } });
+  $('journey').innerHTML = J.map((s, i) => {
+    const prev = i ? J[i - 1][1] : 0;
+    const rate = i === 0 ? '起点' : i === 6 ? `成約のうち <b>${pct(s[1], J[5][1])}%</b>` : `前から <b>${pct(s[1], prev)}%</b>`;
+    return `<div class="jstep${i === weakest ? ' weak' : ''}"><span class="k">${i + 1}. ${esc(s[0])}</span><span class="v">${num(s[1])}</span><span class="bar"><i style="width:${top ? Math.max(1, (s[1] / top) * 100) : 0}%"></i></span><span class="r">${rate}</span></div>`;
+  }).join('');
+  const S = DATA.sources || [];
+  $('srcTable').innerHTML = `<thead><tr><th>流入元 / 記事</th><th>セッション</th><th>標本</th><th>料金</th><th>フォーム</th><th>依頼</th><th>依頼率</th><th>成約</th><th>売上</th></tr></thead><tbody>${
+    S.length ? S.map((x) => `<tr><td class="src" title="${esc(x.key)}">${esc(x.key)}</td><td>${num(x.sessions)}</td><td>${num(x.spec)}</td><td>${num(x.price)}</td><td>${num(x.form)}</td><td>${num(x.requests)}</td><td>${x.sessions ? pct(x.requests, x.sessions) + '%' : '—'}</td><td>${num(x.won)}</td><td>${yen(x.revenue)}</td></tr>`).join('')
+    : '<tr><td colspan="9" class="muted" style="text-align:center">この期間の記録はありません</td></tr>'}</tbody>`;
+  const H = (heatMode === 'note' ? DATA.heatNote : DATA.heat) || [];
+  const max = Math.max(1, ...H.flat());
+  const DOW = ['月', '火', '水', '木', '金', '土', '日'];
+  let g = '<span></span>' + Array.from({ length: 24 }, (_, h) => `<span>${h % 3 === 0 ? h : ''}</span>`).join('');
+  H.forEach((row, d) => { g += `<span>${DOW[d]}</span>` + row.map((n, h) => `<span class="c" style="--o:${n ? (0.15 + 0.85 * n / max).toFixed(2) : 0.06}" title="${DOW[d]}曜 ${h}時台：${n}"></span>`).join(''); });
+  $('heat').innerHTML = g;
+}
+$('heatMode').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return; heatMode = b.dataset.h;
+  document.querySelectorAll('#heatMode button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  renderJourney();
+});
+
 /* ---------- 画面のタブ ---------- */
-const TABS = ['sales', 'access'];
+const TABS = ['sales', 'journey', 'access'];
 let view = 'sales';
 try { if (TABS.indexOf(sessionStorage.getItem('rakugas-dash-tab')) >= 0) view = sessionStorage.getItem('rakugas-dash-tab'); } catch (e) {}
 function showTab(v, focus) {
@@ -462,7 +536,8 @@ function showTab(v, focus) {
 document.querySelector('.tabs').addEventListener('click', (e) => { const b = e.target.closest('.tab'); if (b) showTab(b.id.replace('tab-', '')); });
 document.querySelector('.tabs').addEventListener('keydown', (e) => {
   if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-  e.preventDefault(); showTab(TABS[(TABS.indexOf(view) + 1) % TABS.length], true);
+  e.preventDefault(); const n = TABS.length, step = e.key === 'ArrowRight' ? 1 : n - 1;
+  showTab(TABS[(TABS.indexOf(view) + step) % n], true);
 });
 
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 200); });

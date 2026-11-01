@@ -20,11 +20,11 @@ const NOTIFY_TO = '';
 // サイトのURL（メール本文に載せるだけ。公開後に書き換えてください）
 const SITE_URL = 'https://futurefoundry19840305.github.io/rakugas-zukan/';
 
-const HEADERS = ['受付日時', '受付番号', '状態', 'お名前', '連絡先', 'ご希望', '使いたいサービス', '自動化したいこと', '頻度', '希望の時期', '参考にした標本', 'メモ', '商談', '金額（円）', '確定日'];
+const HEADERS = ['受付日時', '受付番号', '状態', 'お名前', '連絡先', 'ご希望', '使いたいサービス', '自動化したいこと', '頻度', '希望の時期', '参考にした標本', 'メモ', '商談', '金額（円）', '確定日', '流入元'];
 const STATUSES = ['受付', '対応中', '完了'];          // 依頼者に見せる進み具合
 const DEALS = ['未確定', '契約', '継続依頼', '保留', '失注']; // 管理者だけが見る商談の結果
 const WON = ['契約', '継続依頼'];
-const COL = { date: 1, id: 2, status: 3, name: 4, contact: 5, plan: 6, want: 8, deal: 13, amount: 14, decided: 15 };
+const COL = { date: 1, id: 2, status: 3, name: 4, contact: 5, plan: 6, want: 8, deal: 13, amount: 14, decided: 15, source: 16 };
 // 単発の依頼に最初に入れておく金額（見積もりに合わせて書き換える）
 const DEFAULT_PRICE = 3000;
 // 記事のネタを毎朝書き出すGoogleドキュメント（「ラクガス図鑑 note下書き」フォルダ内・作成済み）
@@ -33,7 +33,7 @@ const TOPICS_DOC_ID = '1DeaOWncaTYEvBv7VfKNAX-Ui5LszjHD0BypQefftIvE';
 // アクセスログ（サイトから届く匿名の記録）
 const LOG_SHEET = 'アクセスログ';
 const LOG_HEADERS = ['日時', '訪問者ID', 'セッションID', 'イベント', '対象', '値', 'ページ', '端末', '画面幅'];
-const EVENTS = ['pageview', 'scroll', 'leave', 'filter', 'search', 'sort', 'spec_open', 'copy_code', 'scene', 'req_open', 'req_submit'];
+const EVENTS = ['pageview', 'scroll', 'leave', 'filter', 'search', 'sort', 'spec_open', 'copy_code', 'scene', 'price_view', 'req_open', 'req_submit'];
 
 /** 最初に1回だけ実行：表の見た目を整え、テストメールを送る */
 function setup() {
@@ -48,7 +48,7 @@ function setup() {
   sh.getRange(2, COL.amount, rows, 1).setNumberFormat('#,##0');
   sh.getRange(2, COL.decided, rows, 1).setNumberFormat('yyyy/mm/dd');
   sh.getRange(1, COL.deal, 1, 3).setBackground('#17784a');
-  [150, 120, 80, 120, 200, 200, 180, 360, 100, 110, 220, 200, 100, 110, 110].forEach((w, i) => sh.setColumnWidth(i + 1, w));
+  [150, 120, 80, 120, 200, 200, 180, 360, 100, 110, 220, 200, 100, 110, 110, 180].forEach((w, i) => sh.setColumnWidth(i + 1, w));
   sh.getRange(2, COL.want, rows, 1).setWrap(true);
   // 以前からある行の「商談」が空なら「未確定」にする
   const last = sh.getLastRow();
@@ -93,6 +93,7 @@ function doPost(e) {
     date: new Date(), id: Utilities.getUuid(), status: '受付', name: name, contact: contact,
     plan: str_(d.plan, 60), services: services, want: want,
     freq: str_(d.freq, 40), due: str_(d.due, 40), ref: str_(d.ref, 120),
+    source: str_(d.source, 120) || '直接・ブックマーク',
   };
 
   const lock = LockService.getScriptLock();
@@ -101,7 +102,7 @@ function doPost(e) {
     // 先頭が「=」などだと数式として動くため、文字として保存する
     const safe = (v) => (typeof v === 'string' && /^[=+\-@]/.test(v) ? "'" + v : v);
     const price = /^単発/.test(row.plan) ? DEFAULT_PRICE : '';   // 要相談は空欄（任意で入力）
-    sheet_().appendRow([row.date, row.id, row.status, row.name, row.contact, row.plan, row.services, row.want, row.freq, row.due, row.ref, '', '未確定', price, ''].map(safe));
+    sheet_().appendRow([row.date, row.id, row.status, row.name, row.contact, row.plan, row.services, row.want, row.freq, row.due, row.ref, '', '未確定', price, '', row.source].map(safe));
   } finally {
     lock.releaseLock();
   }
@@ -167,6 +168,7 @@ function notify_(r) {
     '頻度　　　：' + r.freq,
     '希望の時期：' + r.due,
     '参考の標本：' + (r.ref || 'なし'),
+    '流入元　　：' + (r.source || '不明'),
     '',
     '■ 自動化したいこと',
     r.want,
@@ -314,6 +316,16 @@ function query_(from, to, unit) {
     if (!inRange(ts)) return;
     E.push({ ts: ts, vid: String(r[1]), sid: String(r[2]), e: String(r[3]), t: String(r[4]).replace(/^'/, ''), v: String(r[5]).replace(/^'/, ''), device: String(r[7]) });
   });
+  /* ---- 流入元（セッションの最初の表示で決める）・曜日×時間 ---- */
+  const srcOf = {}, heat = [], heatNote = [];
+  for (let i = 0; i < 7; i++) { heat.push(new Array(24).fill(0)); heatNote.push(new Array(24).fill(0)); }
+  E.filter((x) => x.e === 'pageview').sort((a, b) => a.ts - b.ts).forEach((x) => {
+    if (srcOf[x.sid]) return;
+    srcOf[x.sid] = x.t + (x.v ? ' / ' + x.v : '');
+    const j = new Date(x.ts + JST), wd = (j.getUTCDay() + 6) % 7, hr = j.getUTCHours();
+    heat[wd][hr]++;
+    if (/^note\b/.test(x.t)) heatNote[wd][hr]++;
+  });
   E.forEach((x) => {
     const b = at(x.ts);
     b.v[x.vid] = 1; b.s[x.sid] = 1;
@@ -337,6 +349,16 @@ function query_(from, to, unit) {
   E.filter((x) => x.e === 'pageview').forEach((x) => { if (!dev[x.sid]) dev[x.sid] = x.device || '不明'; });
   Object.keys(dev).forEach((k) => { devices[dev[k]] = (devices[dev[k]] || 0) + 1; });
 
+  const SRC = {};
+  const srcRow = (k) => SRC[k] || (SRC[k] = { key: k, sessions: {}, spec: {}, price: {}, form: {}, requests: 0, won: 0, revenue: 0 });
+  Object.keys(srcOf).forEach((sid) => { srcRow(srcOf[sid]).sessions[sid] = 1; });
+  E.forEach((x) => {
+    const k = srcOf[x.sid]; if (!k) return;
+    if (x.e === 'spec_open') srcRow(k).spec[x.sid] = 1;
+    if (x.e === 'price_view') srcRow(k).price[x.sid] = 1;
+    if (x.e === 'req_open') srcRow(k).form[x.sid] = 1;
+  });
+
   /* ---- 依頼・商談・単価 ----
      依頼数・保留・未確定は「受付日」、契約・継続依頼・失注・売上は「確定日」（空なら受付日）で数える */
   const reqSh = sheet_();
@@ -350,8 +372,10 @@ function query_(from, to, unit) {
     const deal = DEALS.indexOf(String(r[COL.deal - 1])) >= 0 ? String(r[COL.deal - 1]) : '未確定';
     const amount = money_(r[COL.amount - 1]);
     const decided = r[COL.decided - 1] instanceof Date ? r[COL.decided - 1].getTime() : rec;
+    const srcKey = String(r[COL.source - 1] || '').replace(/^'/, '') || '（記録なし）';
     if (inRange(rec)) {
       const b = at(rec); b.requests++; T.requests++;
+      srcRow(srcKey).requests++;
       if (deal === '保留') { b.hold++; T.hold++; T.holdValue += amount; }
       if (deal === '未確定') { b.open++; T.open++; T.openValue += amount; }
       recent.push({ ts: rec, date: Utilities.formatDate(r[0], 'Asia/Tokyo', 'yyyy/M/d'), name: String(r[COL.name - 1]).replace(/^'/, ''), plan: planKey_(r[COL.plan - 1]), deal: deal, amount: amount, status: String(r[COL.status - 1]), want: String(r[COL.want - 1]).replace(/^'/, '').slice(0, 70) });
@@ -360,6 +384,7 @@ function query_(from, to, unit) {
       const b = at(decided);
       if (deal === '失注') { b.lost++; T.lost++; return; }
       if (deal === '契約') { b.contract++; T.contract++; } else { b.repeat++; T.repeat++; }
+      srcRow(srcKey).won++; srcRow(srcKey).revenue += amount;
       const key = deal === '継続依頼' ? '継続依頼（月額）' : planKey_(r[COL.plan - 1]);
       const P = plans[key] || (plans[key] = { n: 0, priced: 0, total: 0, min: 0, max: 0 });
       P.n++;
@@ -398,6 +423,18 @@ function query_(from, to, unit) {
       avgPrice: T.priced ? Math.round(T.revenue / T.priced) : 0, medianPrice: median,
       minPrice: prices[0] || 0, maxPrice: prices[prices.length - 1] || 0,
     }),
+    sources: Object.keys(SRC).map((k) => { const x = SRC[k]; return { key: k, sessions: Object.keys(x.sessions).length, spec: Object.keys(x.spec).length, price: Object.keys(x.price).length, form: Object.keys(x.form).length, requests: x.requests, won: x.won, revenue: x.revenue }; })
+      .sort((a, b) => b.revenue - a.revenue || b.requests - a.requests || b.sessions - a.sessions).slice(0, 30),
+    journey: [
+      ['サイトを訪れた', pvSessions.size],
+      ['標本を開いた', sessWith('spec_open').size],
+      ['料金を見た', sessWith('price_view').size],
+      ['依頼フォームを開いた', sessWith('req_open').size],
+      ['依頼が届いた', T.requests],
+      ['成約した', won],
+      ['継続依頼', T.repeat],
+    ],
+    heat: heat, heatNote: heatNote,
     plans: Object.keys(plans).map((k) => { const P = plans[k]; return [k, P.n, P.priced, P.total, P.priced ? Math.round(P.total / P.priced) : 0, P.min, P.max]; }).sort((a, b) => b[3] - a[3]),
     recent: recent.sort((a, b) => b.ts - a.ts).slice(0, 8),
     sheetUrl: SpreadsheetApp.openById(SHEET_ID).getUrl(),
@@ -414,6 +451,13 @@ function query_(from, to, unit) {
 function updateTopics() {
   const to = ymd_(Date.now()), from = ymd_(Date.now() - 29 * DAY);
   const q = query_(from, to, 'week');
+  // 週次の比較（直近7日 と その前の7日）
+  const w1 = query_(ymd_(Date.now() - 6 * DAY), to, 'week');
+  const w0 = query_(ymd_(Date.now() - 13 * DAY), ymd_(Date.now() - 7 * DAY), 'week');
+  const delta = (a, b) => a + '（前週 ' + b + '）';
+  const jline = (q2) => q2.journey.map((s) => s[0] + ' ' + s[1]).join(' → ');
+  const DOW = ['月', '火', '水', '木', '金', '土', '日'];
+  const slots = (h) => { const L = []; h.forEach((row, d) => row.forEach((n, hr) => { if (n) L.push([DOW[d] + '曜 ' + hr + '時台', n]); })); return L.sort((a, b) => b[1] - a[1]).slice(0, 5); };
   const A = q.access;
   const list = (rows, unit) => (rows && rows.length ? rows.map((r) => '- ' + r[0] + '（' + r[1] + (unit || '回') + '）').join('\n') : '- （まだ記録がありません）');
 
@@ -432,8 +476,24 @@ function updateTopics() {
   const refs = Object.keys(refCount).map((k) => [k, refCount[k]]).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
   const text = [
-    'ラクガス図鑑 記事のネタ（自動更新）',
-    '更新：' + q.generated + '　対象：' + from + '〜' + to + '（直近30日）',
+    'ラクガス図鑑 記事のネタと数字（自動更新）',
+    '更新：' + q.generated,
+    '',
+    '■■ 週次の数字（直近7日：' + w1.range.from + '〜' + w1.range.to + '／前週と比較）',
+    '- 訪問者 ' + delta(w1.access.visitors, w0.access.visitors) + '／セッション ' + delta(w1.access.sessions, w0.access.sessions),
+    '- 依頼 ' + delta(w1.deals.requests, w0.deals.requests) + '／成約 ' + delta(w1.deals.won, w0.deals.won) + '／失注 ' + delta(w1.deals.lost, w0.deals.lost),
+    '- 売上 ' + delta(w1.deals.revenue, w0.deals.revenue) + '円／平均単価 ' + w1.deals.avgPrice + '円／見込み ' + (w1.deals.holdValue + w1.deals.openValue) + '円',
+    '- 導線（直近7日）：' + jline(w1),
+    '- 導線（前週）：' + jline(w0),
+    '',
+    '■■ 流入元・記事ごとの成果（直近30日：流入元 / 記事名｜セッション｜標本｜料金｜フォーム｜依頼｜成約｜売上）',
+    q.sources.length ? q.sources.slice(0, 15).map((x) => '- ' + x.key + '｜' + x.sessions + '｜' + x.spec + '｜' + x.price + '｜' + x.form + '｜' + x.requests + '｜' + x.won + '｜' + x.revenue + '円').join('\n') : '- （まだ記録がありません）',
+    '',
+    '■■ 訪問が多い曜日と時間（直近30日・セッションの開始）',
+    '- 全体：' + (slots(q.heat).map((x) => x[0] + '（' + x[1] + '）').join('、') || 'まだ記録がありません'),
+    '- note経由：' + (slots(q.heatNote).map((x) => x[0] + '（' + x[1] + '）').join('、') || 'まだ記録がありません'),
+    '',
+    '■■ 記事のネタ（直近30日）',
     '',
     '■ 見つからなかった検索（結果0件。図鑑にない＝求められているテーマ）',
     list(A.noHit),
@@ -453,8 +513,8 @@ function updateTopics() {
     '■ 参考：どこから来たか',
     list(A.refs),
     '',
-    '■ 参考：アクセス',
-    '- 訪問者 ' + A.visitors + '人／セッション ' + A.sessions + '回／依頼 ' + q.deals.requests + '件',
+    '■ 参考：直近30日のアクセス',
+    '- 訪問者 ' + A.visitors + '人／セッション ' + A.sessions + '回／依頼 ' + q.deals.requests + '件／成約 ' + q.deals.won + '件／売上 ' + q.deals.revenue + '円',
   ].join('\n');
   DocumentApp.openById(TOPICS_DOC_ID).getBody().setText(text);
 }

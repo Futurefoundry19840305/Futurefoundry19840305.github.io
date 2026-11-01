@@ -43,15 +43,35 @@
     }
     return { ev, flush };
   })();
-  (function () {
-    // 参照元：utm_source があればそれ、なければ外部サイトのドメイン
-    let ref = '直接・ブックマーク';
+  /* 流入元：utm_source があればそれ、なければ外部サイトのドメイン。utm_campaign は記事ごとの名前。
+     直接以外の流入は「最後の流入元」として30日間覚え、依頼にも添える（どの記事から依頼が来たかを測るため） */
+  const TOUCH_KEY = 'rakugas-touch';
+  const touch = (() => {
+    let ref = '直接・ブックマーク', camp = '';
     try {
-      const u = new URL(location.href).searchParams.get('utm_source');
-      if (u) ref = u.slice(0, 40);
+      const sp = new URL(location.href).searchParams;
+      const u = sp.get('utm_source');
+      camp = (sp.get('utm_campaign') || '').replace(/[^\w\-]/g, '').slice(0, 60);
+      if (u) ref = u.replace(/[<>"]/g, '').slice(0, 40);
       else if (document.referrer) { const h = new URL(document.referrer).hostname; if (h && h !== location.hostname) ref = h; }
     } catch (e) {}
-    T.ev('pageview', ref);
+    if (ref !== '直接・ブックマーク') { try { localStorage.setItem(TOUCH_KEY, JSON.stringify({ s: ref, c: camp, at: Date.now() })); } catch (e) {} }
+    return { ref, camp };
+  })();
+  const lastTouch = () => {
+    try {
+      const t = JSON.parse(localStorage.getItem(TOUCH_KEY) || 'null');
+      if (t && Date.now() - t.at < 30 * 86400000) return t.s + (t.c ? ' / ' + t.c : '');
+    } catch (e) {}
+    return '直接・ブックマーク';
+  };
+  (function () {
+    T.ev('pageview', touch.ref, touch.camp);
+    // 料金を見た（セッションで1回）
+    if ('IntersectionObserver' in window && $('price')) {
+      const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); T.ev('price_view'); } }, { threshold: 0.4 });
+      io.observe($('price'));
+    }
     // スクロールの到達率
     const marks = [25, 50, 75, 100], hit = new Set();
     addEventListener('scroll', () => {
@@ -318,7 +338,7 @@
     name: $('f-name').value.trim(), contact: $('f-contact').value.trim(),
     services: [...$('f-svcs').querySelectorAll('input:checked')].map((i) => i.value),
     plan: $('f-plan').value, want: $('f-want').value.trim(), freq: $('f-freq').value, due: $('f-due').value,
-    ref: $('f-ref').value.trim(), website: $('f-hp').value, elapsed: Date.now() - openedAt,
+    ref: $('f-ref').value.trim(), website: $('f-hp').value, elapsed: Date.now() - openedAt, source: lastTouch(),
   });
   const asText = (d) => `【GAS作成の依頼】\nお名前：${d.name}\n連絡先：${d.contact}\nご希望：${d.plan}\n使いたいサービス：${d.services.join('、') || '未選択'}\n自動化したいこと：\n${d.want}\n頻度：${d.freq}\n希望の時期：${d.due}\n参考にした標本：${d.ref || 'なし'}`;
   function offline(d, why) { $('copyText').textContent = asText(d); if (why) $('offWhy').textContent = why; show($('offView')); }
