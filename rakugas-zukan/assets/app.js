@@ -35,6 +35,11 @@
   const LV = ['', 'かんたん', 'ふつう', 'ちょい難'];
   const lvDots = (lv) => `<span class="lv" aria-label="難しさ：${LV[lv]}">${[1, 2, 3].map((k) => `<i class="${k <= lv ? 'on' : ''}"></i>`).join('')}</span>`;
   const priceOf = (lv) => (lv === 1 ? '3,000円〜' : 'お見積り');
+  /* 時間削減のめやす */
+  const saveMin = (x) => x.save.man * x.save.per;
+  const fmtSave = (x) => { const m = saveMin(x); return m < 60 ? `約${Math.round(m)}分` : `約${Math.round(m / 60)}時間`; };
+  const fmtMan = (m) => (m < 1 ? `約${Math.round(m * 60)}秒` : `約${m}分`);
+  const saveBadge = (x) => `<span class="save">${ic('clock')}<span>年間 <b>${fmtSave(x)}</b> の削減</span></span>`;
 
   /* 流れ図：きっかけ → GAS → 使うサービス */
   function flow(x) {
@@ -64,7 +69,7 @@
   }
 
   /* ---------- 図鑑の一覧 ---------- */
-  let cat = 'すべて', q = '';
+  let cat = 'すべて', q = '', sort = 'no';
   const habBox = $('habitats');
   const cats = ['すべて', ...Object.keys(HAB).filter((k) => SPEC.some((x) => x.s === k))];
   habBox.innerHTML = cats.map((k) => {
@@ -79,10 +84,12 @@
     renderList();
   });
   $('q').addEventListener('input', (e) => { q = e.target.value; renderList(); });
+  $('sort').addEventListener('change', (e) => { sort = e.target.value; renderList(); });
 
   function renderList() {
     const k = q.trim().toLowerCase();
     const list = SPEC.filter((x) => (cat === 'すべて' || x.s === cat) && (!k || (x.t + x.d + x.use + x.s).toLowerCase().includes(k)));
+    if (sort === 'save') list.sort((a, b) => saveMin(b) - saveMin(a) || a.n - b.n);
     $('count').textContent = `${list.length}種の標本`;
     $('specimens').innerHTML = list.length ? list.map((x) => {
       const h = hab(x.s);
@@ -91,6 +98,7 @@
         <h3>${esc(x.t)}</h3>
         <p class="desc">${esc(x.d)}</p>
         ${flow(x)}
+        ${saveBadge(x)}
         <span class="label-meta"><span>難しさ ${lvDots(x.lv)} ${LV[x.lv]}</span><span class="price-tag">依頼 ${priceOf(x.lv)}</span></span>
       </button>`;
     }).join('') : `<div class="empty"><p>「${esc(q)}」に当てはまる標本は見つかりませんでした。</p><p class="muted">別の言葉で探すか、そのまま作成をご相談ください。</p><p><button class="btn small" type="button" data-open-req>作成を相談する</button></p></div>`;
@@ -114,6 +122,14 @@
         <div class="facts-row"><span>難しさ ${lvDots(x.lv)} <b>${LV[x.lv]}</b></span><span>作成依頼 <b>${priceOf(x.lv)}</b></span></div>
         ${flow(x)}
         <h3>こんな時に便利</h3><p>${esc(x.use)}</p>
+        <h3>時間削減のめやす</h3>
+        <div class="saving">
+          <div class="saving-row"><span class="saving-k">いまの手作業</span><span>${esc(x.save.how)}</span></div>
+          <div class="saving-row"><span class="saving-k">1回あたり</span><span>${fmtMan(x.save.man)} × ${esc(x.save.perT)}</span></div>
+          <div class="saving-row"><span class="saving-k">GASなら</span><span>ほぼ自動（数秒〜1分）</span></div>
+          <div class="saving-total"><span>年間</span><b>${fmtSave(x)}</b><span>の削減</span></div>
+          <p class="saving-note">1回の手作業時間と回数から計算した、めやすです。</p>
+        </div>
         <h3>コード例</h3>
         <div class="code-wrap"><pre><code>${esc(x.code)}</code></pre><button class="copy" type="button" data-copy="${x.n}">コピー</button></div>
         <p class="cnote">${esc(cnote(x.code))}</p>

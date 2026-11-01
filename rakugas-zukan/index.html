@@ -105,12 +105,12 @@
     <div class="wrap">
       <div class="sec-head">
         <h2 id="h-zukan"><span class="tab" aria-hidden="true"></span>44種の標本</h2>
-        <p>生息地（使うサービス）や、やりたいことの言葉で探せます。標本を選ぶと、使いどころとコード例が開きます。</p>
+        <p>生息地（使うサービス）や、やりたいことの言葉で探せます。各標本には、手作業と比べた年間の時間削減のめやすを載せています。標本を選ぶと、計算のもとと使いどころ、コード例が開きます。</p>
       </div>
       <div class="finder">
         <label class="search"><span class="sr">やりたいことで探す</span><span data-i="search"></span><input id="q" type="search" placeholder="やりたいことで探す（例：メール、PDF、毎日）" autocomplete="off"></label>
         <div class="habitats" id="habitats" role="group" aria-label="生息地で絞り込む"></div>
-        <p class="count" id="count" aria-live="polite"></p>
+        <div class="finder-row"><p class="count" id="count" aria-live="polite"></p><label class="sort"><span>並べ替え</span><select id="sort"><option value="no">番号順</option><option value="save">削減時間が大きい順</option></select></label></div>
       </div>
       <p class="caution"><span data-i="warn"></span><span>コードは見本です。シート名や「〜ID」を自分のものに書き換え、テスト用のデータで試してから使ってください。<button class="link" type="button" data-goto="cautions">使う前に知っておきたいこと</button></span></p>
       <div class="specimens" id="specimens"></div>
