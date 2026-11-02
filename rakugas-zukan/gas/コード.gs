@@ -37,6 +37,7 @@ const EVENTS = ['pageview', 'scroll', 'leave', 'filter', 'search', 'sort', 'spec
 
 /** 最初に1回だけ実行：表の見た目を整え、テストメールを送る */
 function setup() {
+  guardAdmin_();
   const sh = sheet_();
   sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold').setBackground('#1a2747').setFontColor('#ffffff');
   sh.setFrozenRows(1);
@@ -82,11 +83,12 @@ function doPost(e) {
   const name = str_(d.name, 100), contact = str_(d.contact, 200), want = str_(d.want, 4000);
   if (!name || !contact || !want) return json_({ ok: false, error: 'invalid', message: 'お名前・連絡先・自動化したいことを入力してください。' });
 
-  // 送りすぎ対策：1分間に10件まで
+  // 送りすぎ対策：1分間に10件まで、6時間で60件まで
   const cache = CacheService.getScriptCache();
-  const count = Number(cache.get('rate') || 0);
-  if (count >= 10) return json_({ ok: false, error: 'busy' });
+  const count = Number(cache.get('rate') || 0), count6h = Number(cache.get('rate6h') || 0);
+  if (count >= 10 || count6h >= 60) return json_({ ok: false, error: 'busy' });
   cache.put('rate', String(count + 1), 60);
+  cache.put('rate6h', String(count6h + 1), 21600);
 
   const services = Array.isArray(d.services) ? d.services.map((s) => str_(s, 30)).filter(String).slice(0, 12).join('、') : '';
   const row = {
@@ -107,7 +109,12 @@ function doPost(e) {
     lock.releaseLock();
   }
 
-  try { notify_(row); } catch (err) { console.error('通知メールの送信に失敗', err); }
+  // 通知メールは6時間で30通まで（いたずらでメールの送信上限を使い切られないように。超えた分もシートには記録される）
+  const mails = Number(cache.get('mail6h') || 0);
+  if (mails < 30) {
+    cache.put('mail6h', String(mails + 1), 21600);
+    try { notify_(row); } catch (err) { console.error('通知メールの送信に失敗', err); }
+  }
   return json_({ ok: true, id: row.id });
 }
 
@@ -146,6 +153,7 @@ function doGet(e) {
 
 /** 動作テスト：エディタで実行すると、テストの依頼が1件記録され、メールが届く */
 function testRequest() {
+  guardAdmin_();
   const res = doPost({ postData: { contents: JSON.stringify({
     name: 'テスト 太郎', contact: 'test@example.com', plan: '単発の作成（3,000円〜）',
     services: ['スプレッドシート', 'Gmail'], want: 'これはテストです。毎月1日に経費を集計してメールで送りたい。',
@@ -196,8 +204,13 @@ function json_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)
 function track_(d) {
   const cache = CacheService.getScriptCache();
   const count = Number(cache.get('trk') || 0);
-  if (count >= 600) return json_({ ok: false, error: 'busy' });   // 1分あたり600回まで
+  if (count >= 300) return json_({ ok: false, error: 'busy' });   // 全体で1分あたり300回まで
   cache.put('trk', String(count + 1), 60);
+  // 同じ訪問者IDからの送りすぎ（いたずら）を止める：10分あたり60回まで
+  const vkey = 'tv:' + String(d && d.vid).slice(0, 20);
+  const vcount = Number(cache.get(vkey) || 0);
+  if (vcount >= 60) return json_({ ok: false, error: 'busy' });
+  cache.put(vkey, String(vcount + 1), 600);
 
   const id = (v) => (typeof v === 'string' && /^[a-z0-9]{6,20}$/.test(v) ? v : '');
   const vid = id(d.vid), sid = id(d.sid);
@@ -240,6 +253,11 @@ function logSheet_() {
    「自分のみ」に制限したデプロイのURLで開いてください。
    それ以外の人が開いても、データは表示しません。
    ========================================================= */
+/** 管理者（このGASの持ち主）以外が実行したら止める。エディタで持ち主が実行するときは通る */
+function guardAdmin_() {
+  if (!isAdmin_()) throw new Error('この操作は管理者だけが実行できます。');
+}
+
 function isAdmin_() {
   const viewer = Session.getActiveUser().getEmail();
   return !!viewer && viewer === Session.getEffectiveUser().getEmail();
@@ -247,7 +265,8 @@ function isAdmin_() {
 
 function admin_() {
   if (!isAdmin_()) {
-    return HtmlService.createHtmlOutput('<p style="font-family:sans-serif;padding:24px">この画面は管理者だけが見られます。</p>').setTitle('ラクガス図鑑');
+    // 管理者以外には、GASの関数を呼び出せる画面（HtmlService）を返さない。ただの文字だけを返す
+    return ContentService.createTextOutput('この画面は管理者だけが見られます。');
   }
   // 最初の表示：直近30日・日ごと
   const to = ymd_(Date.now()), from = ymd_(Date.now() - 29 * DAY);
