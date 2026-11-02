@@ -335,15 +335,23 @@
     const c = e.target.closest('[data-close]'); if (c) { const d = c.closest('dialog'); if (d) d.close(); }
     const g = e.target.closest('[data-goto]'); if (g) { const t = $(g.dataset.goto); if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); }
   });
-  [dlg, plate].forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
+  /* 個人情報の取り扱い（依頼フォームの上に重ねて開く） */
+  const pv = $('privacy');
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('[data-privacy]')) return;
+    e.preventDefault();
+    try { pv.showModal(); } catch (err) { pv.setAttribute('open', ''); }
+  });
+  [dlg, plate, pv].forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
 
   const collect = () => ({
     name: $('f-name').value.trim(), contact: $('f-contact').value.trim(),
     services: [...$('f-svcs').querySelectorAll('input:checked')].map((i) => i.value),
     plan: $('f-plan').value, want: $('f-want').value.trim(), freq: $('f-freq').value, due: $('f-due').value,
     ref: $('f-ref').value.trim(), website: $('f-hp').value, elapsed: Date.now() - openedAt, source: lastTouch(),
+    agree: $('f-agree').checked, policy: '2026-11-02',
   });
-  const asText = (d) => `【GAS作成の依頼】\nお名前：${d.name}\n連絡先：${d.contact}\nご希望：${d.plan}\n使いたいサービス：${d.services.join('、') || '未選択'}\n自動化したいこと：\n${d.want}\n頻度：${d.freq}\n希望の時期：${d.due}\n参考にした標本：${d.ref || 'なし'}`;
+  const asText = (d) => `【GAS作成の依頼】\nお名前：${d.name}\n連絡先：${d.contact}\nご希望：${d.plan}\n使いたいサービス：${d.services.join('、') || '未選択'}\n自動化したいこと：\n${d.want}\n頻度：${d.freq}\n希望の時期：${d.due}\n参考にした標本：${d.ref || 'なし'}\n個人情報の取り扱い：同意済み`;
   function offline(d, why) { $('copyText').textContent = asText(d); if (why) $('offWhy').textContent = why; show($('offView')); }
 
   const LS = 'rakugas-my-requests';
@@ -355,6 +363,7 @@
     const d = collect(), miss = [];
     if (!d.name) miss.push('お名前'); if (!d.contact) miss.push('連絡先'); if (!d.want) miss.push('自動化したいこと');
     if (miss.length) { msg.textContent = miss.join('・') + 'を入力してください。'; msg.hidden = false; return; }
+    if (!d.agree) { msg.textContent = '「個人情報の取り扱い」をお読みいただき、同意のチェックを入れてください。'; msg.hidden = false; $('f-agree').focus(); return; }
     msg.hidden = true;
     if (!CFG.gasUrl) return offline(d, '受付窓口の準備中です。お手数ですが、下の依頼文をコピーしてメールなどで送ってください。');
     sendBtn.disabled = true; sendBtn.textContent = '送信中…';
