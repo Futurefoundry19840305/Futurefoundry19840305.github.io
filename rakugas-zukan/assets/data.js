@@ -617,6 +617,246 @@ window.ZUKAN = {
     "perT": "営業日の毎朝",
     "how": "夜間の処理が動いたかを確認"
    }
+  },
+  {
+   "s": "Webアプリ",
+   "t": "申請をメールで承認してもらう",
+   "d": "申請が入ると上長に「承認・却下」のリンク付きメールが届き、押すと結果がシートに残ります。",
+   "lv": 3,
+   "use": "備品購入・休暇・経費などの申請を、紙やチャットのやり取りなしで承認まで進めたいときに。",
+   "code": "// 申請シートの行について、承認・却下のリンク付きメールを上長へ送る\nconst APP_URL = 'ウェブアプリのURL';\nfunction requestApproval(row) {\n  const sh = SpreadsheetApp.getActive().getSheetByName('申請');\n  const [date, name, item, amount] = sh.getRange(row, 1, 1, 4).getValues()[0];\n  const token = Utilities.getUuid();\n  sh.getRange(row, 6).setValue(token);            // F列：使い捨ての合言葉\n  const link = (a) => APP_URL + '?row=' + row + '&a=' + a + '&t=' + token;\n  GmailApp.sendEmail('boss@example.com', '【承認依頼】' + name + '：' + item,\n    item + '（' + amount + '円）\\n承認する：' + link('ok') + '\\n却下する：' + link('ng'));\n}\n// リンクを開くと確認画面を出す（開いただけでは確定しない）\nfunction doGet(e) {\n  const a = e.parameter.a === 'ok' ? 'ok' : 'ng';\n  const row = Number(e.parameter.row) || 0;\n  const t = String(e.parameter.t || '').replace(/[^\\w-]/g, '');\n  return HtmlService.createHtmlOutput('<p>' + (a === 'ok' ? '承認' : '却下') + 'しますか？</p>' +\n    '<button onclick=\"google.script.run.withSuccessHandler(function(m){document.body.textContent=m})' +\n    '.decide(' + row + ',\\'' + a + '\\',\\'' + t + '\\')\">確定する</button>');\n}\nfunction decide(row, a, t) {\n  const sh = SpreadsheetApp.getActive().getSheetByName('申請');\n  if (!t || sh.getRange(row, 6).getValue() !== t) return 'このリンクは使えません（処理済みか無効です）';\n  sh.getRange(row, 5).setValue(a === 'ok' ? '承認' : '却下');   // E列：結果\n  sh.getRange(row, 6).clearContent();                          // 一度使ったリンクは無効に\n  return '記録しました。';\n}",
+   "save": {
+    "man": 10,
+    "per": 120,
+    "perT": "月10件",
+    "how": "申請内容を転送し、返事を待って台帳に書き写す"
+   },
+   "adv": true,
+   "tips": [
+    "リンクを開いただけで承認されないよう、確認画面のボタンを押して確定する作りにしています（メールのセキュリティ機能がリンクを先読みすることがあるため）。",
+    "行ごとに使い捨ての合言葉（トークン）を発行し、一度使ったリンクは無効にします。",
+    "ウェブアプリは「次のユーザーとして実行：自分」でデプロイし、APP_URL にそのURLを入れます。"
+   ]
+  },
+  {
+   "s": "Webアプリ",
+   "t": "スマホで押せる打刻ボタン",
+   "d": "「出勤」「退勤」ボタンだけのページを作り、押した時刻と人をシートに記録します。",
+   "lv": 3,
+   "use": "小さな事務所やお店の勤怠を、タイムカードや手書きの出勤簿から置きかえたいときに。",
+   "code": "// ボタンだけのページを返す（スマホでも押しやすい大きさ）\nfunction doGet() {\n  return HtmlService.createHtmlOutput(\n    '<style>button{font-size:24px;padding:16px 32px;margin:8px}</style>' +\n    '<button onclick=\"p(\\'出勤\\')\">出勤</button><button onclick=\"p(\\'退勤\\')\">退勤</button><p id=\"m\"></p>' +\n    '<script>function p(t){m.textContent=\"記録中…\";google.script.run.withSuccessHandler(function(s){m.textContent=s}).punch(t)}</script>')\n    .addMetaTag('viewport', 'width=device-width, initial-scale=1');\n}\nfunction punch(type) {\n  if (['出勤', '退勤'].indexOf(type) < 0) return '不正な操作です';\n  const user = Session.getActiveUser().getEmail();     // 同じ組織の中なら取得できる\n  const sh = SpreadsheetApp.openById('勤怠シートID').getSheetByName('打刻');\n  sh.appendRow([new Date(), user, type]);\n  return Utilities.formatDate(new Date(), 'Asia/Tokyo', 'H:mm') + ' に' + type + 'を記録しました';\n}",
+   "save": {
+    "man": 30,
+    "per": 12,
+    "perT": "毎月の締め",
+    "how": "タイムカードや出勤簿を見ながら勤務時間を表に打ち直す"
+   },
+   "adv": true,
+   "tips": [
+    "押した人のメールアドレスが取れるのは、Google Workspace の同じ組織の中で使う場合です。個人のGmail同士では、名前を選ぶ欄を足します。",
+    "ホーム画面に追加しておくと、アプリのように1タップで開けます。",
+    "月末の集計は、記録シートからピボットテーブルや No.001 の集計で作れます。"
+   ]
+  },
+  {
+   "s": "フォーム",
+   "t": "予約を受け付けてカレンダーに入れる",
+   "d": "フォームの希望日時が空いていればカレンダーに登録し、受付・お断りのメールを自動で返します。",
+   "lv": 3,
+   "use": "面談・相談会・レッスンなど、時間枠の予約を受け付けたいときに。",
+   "code": "// フォーム送信時：希望日時が空いていればカレンダーに登録し、結果をメールで返す\nfunction onSubmit(e) {\n  const v = e.namedValues;                                   // 質問名で値を取り出す\n  const start = new Date(v['希望日時'][0]);\n  const end = new Date(start.getTime() + 60 * 60 * 1000);    // 1時間枠\n  const to = v['メールアドレス'][0], name = v['お名前'][0];\n  const cal = CalendarApp.getDefaultCalendar();\n  const lock = LockService.getScriptLock();\n  lock.waitLock(20000);                                      // 同時送信による二重予約を防ぐ\n  try {\n    if (cal.getEvents(start, end).length) {\n      GmailApp.sendEmail(to, 'ご予約について', name + ' 様\\nあいにくその時間は埋まっております。別の日時でお申し込みください。');\n      return;\n    }\n    cal.createEvent('予約：' + name, start, end, { description: to });\n    GmailApp.sendEmail(to, 'ご予約を承りました',\n      name + ' 様\\n' + Utilities.formatDate(start, 'Asia/Tokyo', 'M月d日 H:mm') + ' からでお待ちしております。');\n  } finally {\n    lock.releaseLock();\n  }\n}",
+   "save": {
+    "man": 8,
+    "per": 240,
+    "perT": "月20件",
+    "how": "申込メールを読み、空きを確認して予定を入れ、返信する"
+   },
+   "adv": true,
+   "tips": [
+    "フォームの回答先スプレッドシートに書き、トリガー「フォーム送信時」で動かします（e.namedValues は質問名で値を取り出せます）。",
+    "同時に2人が同じ枠を申し込んでも二重予約にならないよう、ロック（LockService）で1件ずつ処理します。",
+    "営業時間外や休業日を断る条件を足すと、より実用的になります。"
+   ]
+  },
+  {
+   "s": "カレンダー",
+   "t": "全員が空いている会議の候補を探す",
+   "d": "参加者のカレンダーの空き状況を調べて、全員が空いている時間の候補を一覧にします。",
+   "lv": 3,
+   "use": "3人以上の打ち合わせで、日程調整のメールの往復を減らしたいときに。",
+   "code": "// 参加者全員が空いている30分枠を、これから5日間で5つまで探す（拡張サービス「Calendar API」を追加）\nfunction findSlots() {\n  const people = ['a@example.com', 'b@example.com', Session.getActiveUser().getEmail()];\n  const from = new Date(), to = new Date(from.getTime() + 5 * 86400000);\n  const res = Calendar.Freebusy.query({\n    timeMin: from.toISOString(), timeMax: to.toISOString(), timeZone: 'Asia/Tokyo',\n    items: people.map((id) => ({ id })),\n  });\n  const busy = Object.values(res.calendars).flatMap((c) => c.busy || [])\n    .map((b) => [new Date(b.start), new Date(b.end)]);\n  const slots = [];\n  const t = new Date(from); t.setMinutes(t.getMinutes() < 30 ? 30 : 60, 0, 0);   // 次の30分区切りから\n  for (; t < to && slots.length < 5; t.setMinutes(t.getMinutes() + 30)) {\n    const end = new Date(t.getTime() + 30 * 60000);\n    if (t.getDay() % 6 === 0 || t.getHours() < 10 || t.getHours() >= 18) continue;   // 平日10〜18時だけ\n    if (!busy.some(([s, e]) => s < end && t < e)) slots.push(Utilities.formatDate(t, 'Asia/Tokyo', 'M/d H:mm〜'));\n  }\n  Logger.log(slots.length ? slots.join('\\n') : '候補が見つかりませんでした');\n}",
+   "save": {
+    "man": 15,
+    "per": 48,
+    "perT": "月4回",
+    "how": "参加者に都合を聞いて回り、空いている時間を突き合わせる"
+   },
+   "adv": true,
+   "tips": [
+    "Apps Script の「サービス」から拡張サービス「Google Calendar API」を追加すると、Calendar.Freebusy が使えます。",
+    "ほかの人の空き状況が見られるのは、相手がカレンダーを共有している（同じ組織など）場合です。",
+    "見つかった候補を No.009 のように予定として仮登録したり、メールの文面にしたりもできます。"
+   ]
+  },
+  {
+   "s": "スライド",
+   "t": "月次レポートを自動で作って配る",
+   "d": "シートの数字とグラフをスライドのひな形に差し込み、PDFにして関係者へメールします。",
+   "lv": 3,
+   "use": "毎月の売上報告・定例会議の資料づくりを、数字の転記からなくしたいときに。",
+   "code": "// 先月の数字をスライドのひな形に差し込み、PDFにして関係者へ送る\nfunction monthlyReport() {\n  const sh = SpreadsheetApp.openById('集計シートID').getSheetByName('月次');\n  const [sales, orders, rate] = sh.getRange('B2:B4').getValues().flat();   // 売上・件数・成約率\n  const month = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM');\n  const copy = DriveApp.getFileById('ひな形スライドID').makeCopy('月次レポート_' + month);\n  const deck = SlidesApp.openById(copy.getId());\n  deck.replaceAllText('{{売上}}', Number(sales).toLocaleString('ja-JP') + '円');\n  deck.replaceAllText('{{件数}}', String(orders));\n  deck.replaceAllText('{{成約率}}', Math.round(rate * 100) + '%');\n  deck.getSlides()[1].insertSheetsChartAsImage(sh.getCharts()[0]);         // 2枚目にグラフを貼る\n  deck.saveAndClose();\n  GmailApp.sendEmail('team@example.com', '月次レポート（' + month + '）', '今月のレポートを添付します。',\n    { attachments: [copy.getAs('application/pdf')] });\n}",
+   "save": {
+    "man": 90,
+    "per": 12,
+    "perT": "毎月",
+    "how": "数字をシートから資料に書き写し、グラフを貼り直してPDFで送る"
+   },
+   "adv": true,
+   "tips": [
+    "スライドのひな形に {{売上}} のような目印を書いておき、replaceAllText で差し込みます。",
+    "グラフはシートで作っておけば、insertSheetsChartAsImage でスライドに貼れます。",
+    "No.043「毎月1日に実行」と組み合わせると、何もしなくても毎月届きます。初めは送り先を自分だけにして確かめてください。"
+   ]
+  },
+  {
+   "s": "スプレッドシート",
+   "t": "在庫が減ったら発注メールを下書き",
+   "d": "在庫が発注点を下回った品目を仕入先ごとにまとめ、発注メールの下書きを作ります。",
+   "lv": 3,
+   "use": "消耗品や商品の在庫を表で管理していて、発注漏れや発注の手間を減らしたいときに。",
+   "code": "// 在庫が発注点以下の品目を仕入先ごとにまとめ、発注メールの「下書き」を作る\nfunction draftOrders() {\n  const rows = SpreadsheetApp.openById('在庫シートID').getSheetByName('在庫')\n    .getDataRange().getValues().slice(1);                    // 1行目は見出し\n  const bySupplier = {};\n  rows.forEach(([item, stock, point, qty, mail]) => {        // 品名・在庫・発注点・発注数・仕入先メール\n    if (item && mail && stock <= point) (bySupplier[mail] = bySupplier[mail] || []).push('・' + item + '　' + qty + '個');\n  });\n  Object.keys(bySupplier).forEach((mail) => {\n    GmailApp.createDraft(mail, '発注のお願い',\n      'いつもお世話になっております。\\n下記の発注をお願いいたします。\\n\\n' + bySupplier[mail].join('\\n'));\n  });\n}",
+   "save": {
+    "man": 20,
+    "per": 48,
+    "perT": "月4回",
+    "how": "在庫表を見て足りない物を拾い出し、仕入先ごとにメールを書く"
+   },
+   "adv": true,
+   "tips": [
+    "いきなり送らず「下書き」にしているので、数量を確かめてから自分で送信できます。",
+    "同じ品目の下書きが毎朝できないよう、発注した日を記録する列を足して、発注済みは飛ばすようにすると安心です。",
+    "在庫数を No.024「シートが編集されたら動く」で見張れば、減った瞬間に知らせることもできます。"
+   ]
+  },
+  {
+   "s": "自動実行",
+   "t": "契約の更新日が近づいたら知らせる",
+   "d": "契約台帳を毎朝見て、更新日の30日前と7日前に担当者へメールで知らせます。",
+   "lv": 3,
+   "use": "サービスの契約・保守・リース・ドメインなど、うっかり自動更新や期限切れを防ぎたいときに。",
+   "code": "// 毎朝：更新日の30日前・7日前になった契約を、担当者にメールで知らせる\nfunction remindRenewals() {\n  const rows = SpreadsheetApp.openById('契約台帳ID').getSheetByName('契約').getDataRange().getValues().slice(1);\n  const today = new Date(); today.setHours(0, 0, 0, 0);\n  rows.forEach(([name, due, owner]) => {                     // 契約名・更新日・担当者メール\n    if (!(due instanceof Date) || !owner) return;\n    const days = Math.round((due - today) / 86400000);\n    if ([30, 7].indexOf(days) >= 0) {\n      GmailApp.sendEmail(owner, '【更新' + days + '日前】' + name,\n        name + ' の更新日は ' + Utilities.formatDate(due, 'Asia/Tokyo', 'yyyy/M/d') + ' です。継続・解約のご判断をお願いします。');\n    }\n  });\n}",
+   "save": {
+    "man": 20,
+    "per": 12,
+    "perT": "毎月",
+    "how": "契約台帳を開き、近づいている更新日を目で探して連絡する"
+   },
+   "adv": true,
+   "tips": [
+    "トリガー「時間主導型・日付ベース」で毎朝1回動かします。",
+    "「何日前に知らせるか」は [30, 7] の部分で自由に変えられます。",
+    "更新日の列は日付の形式（例：2026/12/31）で入れてください。文字として入っていると判定できません。"
+   ]
+  },
+  {
+   "s": "ドライブ",
+   "t": "公開しすぎのファイルを見つける",
+   "d": "「リンクを知っている全員」などに公開されている自分のファイルを探し、一覧にします。",
+   "lv": 3,
+   "use": "情報漏えいの点検に。退職者の引き継ぎや、取引先との共有を見直すときにも。",
+   "code": "// 自分がオーナーのファイルのうち、外部に公開されているものを「共有チェック」シートに書き出す\nfunction auditSharing() {\n  const out = [['ファイル名', '共有範囲', '最終更新', 'URL']];\n  const open = [DriveApp.Access.ANYONE, DriveApp.Access.ANYONE_WITH_LINK];\n  const files = DriveApp.searchFiles(\"'me' in owners and trashed = false\");\n  while (files.hasNext()) {\n    const f = files.next();\n    const a = f.getSharingAccess();\n    if (open.indexOf(a) >= 0) out.push([f.getName(), String(a), f.getLastUpdated(), f.getUrl()]);\n  }\n  const ss = SpreadsheetApp.getActive();\n  const sh = ss.getSheetByName('共有チェック') || ss.insertSheet('共有チェック');\n  sh.clear().getRange(1, 1, out.length, out[0].length).setValues(out);\n}",
+   "save": {
+    "man": 60,
+    "per": 4,
+    "perT": "四半期ごと",
+    "how": "ドライブのファイルを1つずつ開いて共有設定を確かめる"
+   },
+   "adv": true,
+   "tips": [
+    "ファイルが多いと1回の実行時間（6分）を超えることがあります。そのときは No.056 の分割処理と組み合わせます。",
+    "見つけたファイルの共有をまとめて直すなら No.036 と組み合わせます。まずは一覧で確認してから直すのが安全です。",
+    "組織のファイル全体を点検するのは、Google Workspace の管理者向けの機能のほうが向いています。"
+   ]
+  },
+  {
+   "s": "ドライブ",
+   "t": "PDFや画像の文字を読み取る",
+   "d": "届いた請求書などのPDFを文字に変換（OCR）し、合計金額などをシートに書き出します。",
+   "lv": 3,
+   "use": "紙やPDFで届く書類の金額・日付を、手で打ち込まずに台帳へ入れたいときに。",
+   "code": "// フォルダのPDFを文字にして、「合計」のあとの金額をシートに書き出す（拡張サービス「Drive API」を追加）\nfunction readPdfs() {\n  const sh = SpreadsheetApp.getActive().getSheetByName('読み取り結果');\n  const done = DriveApp.getFolderById('処理済みフォルダID');\n  const files = DriveApp.getFolderById('PDFフォルダID').getFilesByType(MimeType.PDF);\n  while (files.hasNext()) {\n    const pdf = files.next();\n    const doc = Drive.Files.create({ name: pdf.getName(), mimeType: MimeType.GOOGLE_DOCS },\n      pdf.getBlob(), { ocrLanguage: 'ja' });                  // ドキュメントに変換するときに文字を読み取る\n    const text = DocumentApp.openById(doc.id).getBody().getText();\n    const m = text.match(/合計[^\\d]{0,10}([\\d,]+)/);\n    sh.appendRow([new Date(), pdf.getName(), m ? Number(m[1].replace(/,/g, '')) : '要確認', text.slice(0, 200)]);\n    DriveApp.getFileById(doc.id).setTrashed(true);            // 作業用のドキュメントはごみ箱へ\n    pdf.moveTo(done);                                         // 読み取ったPDFは処理済みフォルダへ\n  }\n}",
+   "save": {
+    "man": 5,
+    "per": 360,
+    "perT": "月30枚",
+    "how": "PDFを開いて金額や日付を見ながら台帳に打ち込む"
+   },
+   "adv": true,
+   "tips": [
+    "Apps Script の「サービス」から拡張サービス「Drive API」を追加します。PDFをGoogleドキュメントに変換するときに文字を読み取ります。",
+    "読み取りは完璧ではありません。「要確認」の行や金額は、元のPDFと見比べてから使ってください。",
+    "No.007「添付ファイルをドライブに保存」と組み合わせると、メールで届いたPDFから自動で読み取れます。"
+   ]
+  },
+  {
+   "s": "Gmail",
+   "t": "問い合わせをAIで分類・要約",
+   "d": "問い合わせメールをAI（Gemini API）に読ませて種類分けと1行要約をし、ラベルとシートに残します。",
+   "lv": 3,
+   "use": "問い合わせ窓口のメールが多く、急ぎ・担当ごとに振り分ける手間を減らしたいときに。",
+   "code": "// まだ処理していない問い合わせメールを、AI（Gemini API）で分類・要約してラベルとシートに残す\nconst MODEL = 'gemini-2.5-flash';                            // 使うモデル名（最新の名前に合わせる）\nfunction triageMail() {\n  const key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');   // キーはコードに書かない\n  const sh = SpreadsheetApp.getActive().getSheetByName('問い合わせ');\n  const doneLabel = GmailApp.getUserLabelByName('AI済み') || GmailApp.createLabel('AI済み');\n  GmailApp.search('to:info@example.com -label:AI済み newer_than:2d', 0, 20).forEach((th) => {\n    const m = th.getMessages()[0];\n    const prompt = '次のメールを「見積」「不具合」「請求」「その他」のどれかに分類し、1行で要約してください。' +\n      'JSONで {\"cat\":\"\",\"sum\":\"\"} だけを返してください。\\n\\n' + m.getPlainBody().slice(0, 3000);\n    const res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent', {\n      method: 'post', contentType: 'application/json', headers: { 'x-goog-api-key': key },\n      payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } }),\n    });\n    const ai = JSON.parse(JSON.parse(res.getContentText()).candidates[0].content.parts[0].text);\n    const label = 'AI/' + ai.cat;\n    th.addLabel(GmailApp.getUserLabelByName(label) || GmailApp.createLabel(label)).addLabel(doneLabel);\n    sh.appendRow([m.getDate(), m.getFrom(), m.getSubject(), ai.cat, ai.sum]);\n  });\n}",
+   "save": {
+    "man": 2,
+    "per": 1200,
+    "perT": "月100通",
+    "how": "問い合わせを1通ずつ読み、種類を判断して担当に振り分ける"
+   },
+   "adv": true,
+   "tips": [
+    "APIキーはコードに書かず、「プロジェクトの設定」→「スクリプト プロパティ」に GEMINI_API_KEY として保存します。キーは公開の場所に置かないでください。",
+    "メールの本文を外部のAIに送ることになります。お客さまの個人情報の扱いについて、社内のルールや利用規約を確かめてから使ってください。",
+    "AIの分類はまちがえることがあります。最初は「分類の提案」として使い、人が確かめる運用にします。モデル名は最新のものに合わせてください。"
+   ]
+  },
+  {
+   "s": "外部連携",
+   "t": "外部サービスと毎晩データを同期",
+   "d": "ネットショップや業務システムのAPIから新しいデータを取り込み、シートを毎晩最新にします。",
+   "lv": 3,
+   "use": "別のサービスの管理画面から、毎日CSVを書き出して貼り付けている作業をなくしたいときに。",
+   "code": "// 毎晩：外部サービスのAPIから注文を取得し、まだ取り込んでいないものだけをシートに追加する\nfunction syncOrders() {\n  const props = PropertiesService.getScriptProperties();\n  const token = props.getProperty('SHOP_API_TOKEN');         // アクセストークンは設定に保存\n  const sh = SpreadsheetApp.getActive().getSheetByName('注文');\n  const known = new Set(sh.getRange('A2:A').getValues().flat().map(String));   // 取り込み済みの注文番号\n  let url = 'https://api.example.com/v1/orders?since=' + encodeURIComponent(props.getProperty('LAST_SYNC') || '');\n  const rows = [];\n  while (url) {                                              // ページを順にたどる\n    const res = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + token }, muteHttpExceptions: true });\n    if (res.getResponseCode() !== 200) throw new Error('取得に失敗しました：' + res.getResponseCode());\n    const body = JSON.parse(res.getContentText());\n    body.orders.filter((o) => !known.has(String(o.id)))\n      .forEach((o) => rows.push([o.id, new Date(o.created_at), o.total]));\n    url = body.next || null;\n  }\n  if (rows.length) sh.getRange(sh.getLastRow() + 1, 1, rows.length, 3).setValues(rows);\n  props.setProperty('LAST_SYNC', new Date().toISOString());\n}",
+   "save": {
+    "man": 15,
+    "per": 240,
+    "perT": "営業日の毎日",
+    "how": "管理画面からCSVを書き出し、シートに貼り付けて整える"
+   },
+   "adv": true,
+   "tips": [
+    "アクセストークンは「スクリプト プロパティ」に保存し、コードやシートに書かないでください。",
+    "取り込み済みの番号を見て、同じデータを二重に入れないようにしています。",
+    "URL・ページのたどり方・項目名はサービスごとに違います。使うサービスのAPIの説明書に合わせて書き換えます。"
+   ]
+  },
+  {
+   "s": "自動実行",
+   "t": "大量のデータを分けて処理する",
+   "d": "1回6分の実行時間の上限を超えないよう、5分で区切り、1分後に続きから自動で再開します。",
+   "lv": 3,
+   "use": "数千行のデータの一括処理や、ファイルの大量整理が「時間切れ」で止まってしまうときに。",
+   "code": "// 5分で区切り、1分後に続きの行から自動で再開する\nfunction processAll() {\n  ScriptApp.getProjectTriggers().filter((t) => t.getHandlerFunction() === 'processAll')\n    .forEach((t) => ScriptApp.deleteTrigger(t));             // 前回の予約を片づける\n  const props = PropertiesService.getScriptProperties();\n  const sh = SpreadsheetApp.getActive().getSheetByName('データ');\n  const last = sh.getLastRow(), began = Date.now();\n  let row = Number(props.getProperty('NEXT_ROW') || 2);\n  for (; row <= last; row++) {\n    if (Date.now() - began > 5 * 60 * 1000) break;           // 5分たったら区切る\n    const value = sh.getRange(row, 1).getValue();\n    sh.getRange(row, 2).setValue(String(value).trim());      // ここに1行ぶんの処理を書く（例：整形して隣の列へ）\n  }\n  if (row <= last) {\n    props.setProperty('NEXT_ROW', String(row));\n    ScriptApp.newTrigger('processAll').timeBased().after(60 * 1000).create();   // 1分後に続きから\n  } else {\n    props.deleteProperty('NEXT_ROW');                        // 最後まで終わった\n  }\n}",
+   "save": {
+    "man": 10,
+    "per": 24,
+    "perT": "月2回",
+    "how": "範囲を区切って何度も実行し直し、どこまで終わったかを手で管理する"
+   },
+   "adv": true,
+   "tips": [
+    "どこまで進んだかを「スクリプト プロパティ」に覚えておき、次の回はそこから始めます。",
+    "続きの予約（トリガー）は毎回作り直し、終わったら片づけるので、トリガーがたまりません。",
+    "No.044「エラー時に自分へ知らせる」と組み合わせると、途中で止まったときにすぐ気づけます。"
+   ]
   }
  ],
  "icons": {

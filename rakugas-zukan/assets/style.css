@@ -366,3 +366,9 @@ fieldset.field{border:0;margin:0;padding:0}
 .foot .wrap{display:flex;gap:16px 32px;flex-wrap:wrap;justify-content:space-between;font-size:13px;color:var(--ink-2)}
 .foot .logo{font-size:17px;color:var(--ink)}
 .foot .privacy{flex-basis:100%;font-size:12px}
+
+/* 応用の標本 */
+.adv-tag{display:inline-block;margin-left:8px;padding:1px 7px;border:1.5px solid var(--ink);border-radius:3px;background:var(--ink);color:var(--sheet);font-size:11px;font-weight:700;letter-spacing:.08em;line-height:1.5;vertical-align:1px}
+.hab .adv-dot{width:auto;height:auto;background:none;color:currentColor;font-size:11px;line-height:1}
+.tips{margin:0;padding-left:1.2em;display:grid;gap:6px;color:var(--ink-2)}
+.tips li::marker{color:var(--leaf)}

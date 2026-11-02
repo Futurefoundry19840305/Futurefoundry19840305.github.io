@@ -1,6 +1,6 @@
 # ラクガス図鑑
 
-Googleの「めんどう」を、GAS（Google Apps Script）でラクにする44の方法を集めた図鑑サイトです。
+Googleの「めんどう」を、GAS（Google Apps Script）でラクにする56の方法を集めた図鑑サイトです（うち12種は、AI・外部API・承認の流れなどを組み合わせる「応用」）。
 動くデモ・コード例・作成依頼フォーム（3,000円〜）つき。
 
 ## 構成
@@ -23,7 +23,7 @@ GAS ウェブアプリ（gas/コード.gs）
 | `index.html` | ページ本体 |
 | `assets/style.css` | デザイン |
 | `assets/app.js` | 画面の動き（図鑑・観察窓・依頼フォーム） |
-| `assets/data.js` | 44種の標本と観察窓の場面データ |
+| `assets/data.js` | 56種の標本（No.045〜056は応用。`adv: true` と「応用のポイント」`tips` つき）と観察窓の場面データ |
 | `assets/config.js` | **GASのURLを書く場所** |
 | `gas/コード.gs` | 依頼の受付窓口（GASに貼り付けるコード） |
 | `gas/dashboard.html` | 管理者ダッシュボードの画面（GASに「dashboard」という名前で追加） |

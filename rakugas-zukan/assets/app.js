@@ -131,7 +131,7 @@
     else if (c.includes('timeBased') || x.s === '自動実行') tg = ['clock', '決まった時間'];
     else if (c.includes('// セルに')) tg = ['edit', 'セルに入力'];
     else tg = ['tap', '実行ボタン'];
-    const M = [['SpreadsheetApp', 'sheet', 'シート'], ['GmailApp', 'mail', 'メール'], ['CalendarApp', 'cal', 'カレンダー'], ['DriveApp', 'drive', 'ドライブ'], ['DocumentApp', 'doc', 'ドキュメント'], ['SlidesApp', 'slide', 'スライド'], ['FormApp', 'form', 'フォーム'], ['Charts.', 'chart', 'グラフ'], ['LanguageApp', 'tr', '翻訳'], ['HtmlService', 'web', 'Webページ'], ['line.me', 'chat', 'LINE'], ['Webhook', 'chat', 'チャット'], ['UrlFetchApp', 'ext', '外部サイト']];
+    const M = [['SpreadsheetApp', 'sheet', 'シート'], ['GmailApp', 'mail', 'メール'], ['CalendarApp', 'cal', 'カレンダー'], ['DriveApp', 'drive', 'ドライブ'], ['DocumentApp', 'doc', 'ドキュメント'], ['SlidesApp', 'slide', 'スライド'], ['FormApp', 'form', 'フォーム'], ['Charts.', 'chart', 'グラフ'], ['LanguageApp', 'tr', '翻訳'], ['Calendar.', 'cal', 'カレンダー'], ['generativelanguage', 'ext', 'AI'], ['HtmlService', 'web', 'Webページ'], ['line.me', 'chat', 'LINE'], ['Webhook', 'chat', 'チャット'], ['UrlFetchApp', 'ext', '外部サイト']];
     let sv = M.map((m) => [c.indexOf(m[0]), m]).filter((a) => a[0] >= 0).sort((a, b) => a[0] - b[0]).map((a) => a[1]);
     if (sv.some((m) => m[1] === 'chat')) sv = sv.filter((m) => m[1] !== 'ext');
     if (!sv.length) sv = [[0, 'sheet', 'シート']];
@@ -151,10 +151,12 @@
   /* ---------- 図鑑の一覧 ---------- */
   let cat = 'すべて', q = '', sort = 'no';
   const habBox = $('habitats');
-  const cats = ['すべて', ...Object.keys(HAB).filter((k) => SPEC.some((x) => x.s === k))];
+  const ADV = '応用';   // 複数サービスの連携・AI・外部APIなど、一歩進んだ使い方
+  const inCat = (x, k) => k === 'すべて' || (k === ADV ? !!x.adv : x.s === k);
+  const cats = ['すべて', ...(SPEC.some((x) => x.adv) ? [ADV] : []), ...Object.keys(HAB).filter((k) => SPEC.some((x) => x.s === k))];
   habBox.innerHTML = cats.map((k) => {
-    const n = k === 'すべて' ? SPEC.length : SPEC.filter((x) => x.s === k).length;
-    const dot = k === 'すべて' ? '' : `<span class="dot" style="--hc:var(${hab(k).c})"></span>`;
+    const n = SPEC.filter((x) => inCat(x, k)).length;
+    const dot = k === 'すべて' ? '' : k === ADV ? '<span class="dot adv-dot" aria-hidden="true">★</span>' : `<span class="dot" style="--hc:var(${hab(k).c})"></span>`;
     return `<button class="hab" type="button" aria-pressed="${k === cat}" data-cat="${esc(k)}">${dot}${esc(k)}<span class="n">${n}</span></button>`;
   }).join('');
   habBox.addEventListener('click', (e) => {
@@ -174,13 +176,13 @@
 
   function renderList() {
     const k = q.trim().toLowerCase();
-    const list = SPEC.filter((x) => (cat === 'すべて' || x.s === cat) && (!k || (x.t + x.d + x.use + x.s).toLowerCase().includes(k)));
+    const list = SPEC.filter((x) => inCat(x, cat) && (!k || (x.t + x.d + x.use + x.s + (x.adv ? ADV : '')).toLowerCase().includes(k)));
     if (sort === 'save') list.sort((a, b) => saveMin(b) - saveMin(a) || a.n - b.n);
     $('count').textContent = `${list.length}種の標本`;
     $('specimens').innerHTML = list.length ? list.map((x) => {
       const h = hab(x.s);
       return `<button class="label" type="button" data-n="${x.n}" style="--hc:var(${h.c})" aria-label="${esc(x.no + ' ' + x.t)}の詳細を開く">
-        <span class="label-top"><span class="label-no">${x.no}</span><span class="label-hab">${ic(h.i)}${esc(x.s)}</span></span>
+        <span class="label-top"><span class="label-no">${x.no}${x.adv ? '<span class="adv-tag">応用</span>' : ''}</span><span class="label-hab">${ic(h.i)}${esc(x.s)}</span></span>
         <h3>${esc(x.t)}</h3>
         <p class="desc">${esc(x.d)}</p>
         ${flow(x)}
@@ -199,7 +201,7 @@
     $('plateInner').style.setProperty('--hc', `var(${h.c})`);
     $('plateInner').innerHTML = `
       <div class="plate-head">
-        <div class="label-top"><span class="label-no">${x.no}</span><span class="label-hab">${ic(h.i)}${esc(x.s)}</span></div>
+        <div class="label-top"><span class="label-no">${x.no}${x.adv ? '<span class="adv-tag">応用</span>' : ''}</span><span class="label-hab">${ic(h.i)}${esc(x.s)}</span></div>
         <h2 id="plateTitle">${esc(x.t)}</h2>
         <p>${esc(x.d)}</p>
         <button class="close" type="button" data-close aria-label="閉じる">×</button>
@@ -208,6 +210,7 @@
         <div class="facts-row"><span>難しさ ${lvDots(x.lv)} <b>${LV[x.lv]}</b></span><span>作成依頼 <b>${priceOf(x.lv)}</b></span></div>
         ${flow(x)}
         <h3>こんな時に便利</h3><p>${esc(x.use)}</p>
+        ${x.tips && x.tips.length ? `<h3>応用のポイント</h3><ul class="tips">${x.tips.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
         <h3>時間削減のめやす</h3>
         <div class="saving">
           <div class="saving-row"><span class="saving-k">いまの手作業</span><span>${esc(x.save.how)}</span></div>
