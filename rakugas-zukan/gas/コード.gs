@@ -511,6 +511,7 @@ function updateTopics() {
     '■■ 訪問が多い曜日と時間（直近30日・セッションの開始）',
     '- 全体：' + (slots(q.heat).map((x) => x[0] + '（' + x[1] + '）').join('、') || 'まだ記録がありません'),
     '- note経由：' + (slots(q.heatNote).map((x) => x[0] + '（' + x[1] + '）').join('、') || 'まだ記録がありません'),
+    ...threadsLines_(q),
     '',
     '■■ 記事のネタ（直近30日）',
     '',
@@ -536,4 +537,10 @@ function updateTopics() {
     '- 訪問者 ' + A.visitors + '人／セッション ' + A.sessions + '回／依頼 ' + q.deals.requests + '件／成約 ' + q.deals.won + '件／売上 ' + q.deals.revenue + '円',
   ].join('\n');
   DocumentApp.openById(TOPICS_DOC_ID).getBody().setText(text);
+}
+
+/** Threads の成績（threads.gs があるときだけ。失敗しても記事のネタの更新は止めない） */
+function threadsLines_(q) {
+  if (typeof threadsSummary_ !== 'function') return [];
+  try { return threadsSummary_(q); } catch (err) { return ['', '■■ Threads の投稿と成績', '- （読み取りに失敗：' + String(err.message || err).slice(0, 80) + '）']; }
 }
