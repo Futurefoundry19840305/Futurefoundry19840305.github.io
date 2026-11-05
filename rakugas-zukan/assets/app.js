@@ -335,6 +335,23 @@
     const c = e.target.closest('[data-close]'); if (c) { const d = c.closest('dialog'); if (d) d.close(); }
     const g = e.target.closest('[data-goto]'); if (g) { const t = $(g.dataset.goto); if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); }
   });
+  /* 付録：不動産業界（右のタブから引き出しのように開く） */
+  const fx = $('furoku');
+  function openFuroku() {
+    if (fx.open) return;
+    try { fx.showModal(); } catch (err) { fx.setAttribute('open', ''); }
+    fx.querySelector('.fx-panel').scrollTop = 0;
+    T.ev('filter', '付録：不動産業界');
+  }
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-furoku]')) { e.preventDefault(); return openFuroku(); }
+    // 引き出しの中の「近い標本」や相談ボタンを押したら、引き出しを閉じてから開く
+    if (fx.open && e.target.closest('#furoku .fx-spec, #furoku [data-ref]')) fx.close();
+  }, true);
+  fx.addEventListener('click', (e) => { if (e.target === fx) fx.close(); });
+  if (location.hash === '#furoku') openFuroku();
+  addEventListener('hashchange', () => { if (location.hash === '#furoku') openFuroku(); });
+
   /* 個人情報の取り扱い（依頼フォームの上に重ねて開く） */
   const pv = $('privacy');
   document.addEventListener('click', (e) => {

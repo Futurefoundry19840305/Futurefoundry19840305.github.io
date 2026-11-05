@@ -25,7 +25,7 @@ GAS ウェブアプリ（gas/コード.gs）
 | `assets/app.js` | 画面の動き（図鑑・観察窓・依頼フォーム） |
 | `assets/data.js` | 56種の標本（No.045〜056は応用。`adv: true` と「応用のポイント」`tips` つき）と観察窓の場面データ |
 | `assets/config.js` | **GASのURLを書く場所** |
-| `index.html` の `#furoku` | 付録「不動産業務のGAS化判定」（62業務の判定・最初に着手したい12業務・全件の表） |
+| `index.html` の `#furoku` | 画面右端のタブ「不動産業界」から開く付録「不動産業務のGAS化判定」（62業務の判定・最初に着手したい12業務・全件の表） |
 | `gas/コード.gs` | 依頼の受付窓口（GASに貼り付けるコード） |
 | `gas/dashboard.html` | 管理者ダッシュボードの画面（GASに「dashboard」という名前で追加） |
 | `gas/threads.gs` | Threads への予約投稿（承認したものだけ）と成績の記録（GASに「threads」という名前で追加） |

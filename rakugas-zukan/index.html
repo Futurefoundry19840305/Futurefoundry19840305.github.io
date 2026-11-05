@@ -27,7 +27,6 @@
       <a class="nav-link" href="#anatomy">しくみ</a>
       <a class="nav-link" href="#price">料金</a>
       <a class="nav-link" href="#guide">はじめ方</a>
-      <a class="nav-link" href="#furoku">付録</a>
       <button class="btn primary small" type="button" data-open-req>作成を依頼する</button>
     </nav>
   </div>
@@ -227,11 +226,26 @@
     </div>
   </section>
 
-  <section class="sec" id="furoku" aria-labelledby="h-furoku">
-    <div class="wrap">
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <a class="logo" href="#top"><span class="logo-mark" data-i="gear"></span>ラクガス図鑑</a>
+    <span>コード例は見本です。ご利用は自己責任でお願いします。</span>
+    <span class="privacy">サイトの改善のため、個人を特定しない形で、どの機能が使われたかを記録しています。ブラウザの「トラッキング拒否」を有効にしている場合は記録しません。<button class="link" type="button" data-privacy>個人情報の取り扱い</button></span>
+  </div>
+</footer>
+
+<!-- 付録：不動産業界（右のタブから開く） -->
+<button class="fx-tab" type="button" data-furoku aria-haspopup="dialog" aria-controls="furoku" aria-label="不動産業界：業務のGAS化判定を開く"><span aria-hidden="true"><i>不</i><i>動</i><i>産</i><i>業</i><i>界</i></span></button>
+<dialog id="furoku" class="fx-drawer" aria-labelledby="h-furoku">
+  <div class="fx-panel">
+    <div class="fx-bar-top">
+      <div><p class="fx-kicker">付録・業界別</p><h2 id="h-furoku">不動産業務のGAS化判定</h2></div>
+      <button class="close" type="button" data-close aria-label="閉じる">×</button>
+    </div>
+    <div class="fx-body">
       <div class="sec-head">
-        <p class="fx-kicker">付録</p>
-        <h2 id="h-furoku"><span class="tab" aria-hidden="true"></span>不動産業務のGAS化判定</h2>
         <p>不動産会社（賃貸仲介・賃貸管理・売買仲介）の業務を62に分け、それぞれをGASで自動化できるかを判定しました。判定は一般的な業務の流れを想定した目安です。使っている管理システム・保証会社・電子契約サービスによって変わります。</p>
       </div>
 
@@ -323,16 +337,8 @@
         <button class="btn primary" type="button" data-ref="付録 不動産業務のGAS化判定">自社の業務で相談する</button>
       </div>
     </div>
-  </section>
-</main>
-
-<footer class="foot">
-  <div class="wrap">
-    <a class="logo" href="#top"><span class="logo-mark" data-i="gear"></span>ラクガス図鑑</a>
-    <span>コード例は見本です。ご利用は自己責任でお願いします。</span>
-    <span class="privacy">サイトの改善のため、個人を特定しない形で、どの機能が使われたかを記録しています。ブラウザの「トラッキング拒否」を有効にしている場合は記録しません。<button class="link" type="button" data-privacy>個人情報の取り扱い</button></span>
   </div>
-</footer>
+</dialog>
 
 <!-- 標本の詳細 -->
 <dialog id="plate" aria-labelledby="plateTitle">
