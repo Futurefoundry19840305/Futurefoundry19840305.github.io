@@ -336,7 +336,7 @@
     const g = e.target.closest('[data-goto]'); if (g) { const t = $(g.dataset.goto); if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); }
   });
   /* 付録：業界別（右端のタブから引き出しのように開く） */
-  const FX = { 'furoku': '付録：不動産業界', 'furoku-hotel': '付録：旅館・ホテル' };
+  const FX = { 'furoku': '付録：不動産業界', 'furoku-hotel': '付録：旅館・ホテル', 'furoku-food': '付録：飲食店' };
   const drawers = Object.keys(FX).map((id) => $(id)).filter(Boolean);
   function openFuroku(id) {
     const d = $(id); if (!d || d.open) return;

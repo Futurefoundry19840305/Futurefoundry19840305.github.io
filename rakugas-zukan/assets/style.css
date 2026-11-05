@@ -456,7 +456,8 @@ fieldset.field{border:0;margin:0;padding:0}
 .fx-tab span{display:flex;flex-direction:column;align-items:center;gap:3px}.fx-tab i{font-style:normal;display:block;line-height:1.05}
 .fx-tab:hover{padding-right:14px}
 .fx-tab:focus-visible{outline-offset:-6px}
-.fx-tab+.fx-tab{background:var(--h-cal);color:var(--paper)}
+.fx-tab:nth-child(2){background:var(--h-cal);color:var(--paper)}
+.fx-tab:nth-child(3){background:var(--h-slide);color:var(--paper)}
 @media (max-width:560px){.fx-tabs{top:auto;bottom:84px;transform:none;gap:8px}.fx-tab{font-size:12px;padding:10px 6px}}
 dialog.fx-drawer{margin:0 0 0 auto;height:100dvh;max-height:100dvh;max-width:100vw;width:min(1040px,100vw);border-radius:0;border-width:0 0 0 2px;box-shadow:-8px 0 0 var(--ink);
   background:var(--paper);overflow:hidden}
