@@ -387,3 +387,63 @@ fieldset.field{border:0;margin:0;padding:0}
 .policy a{color:var(--leaf);font-weight:700}
 .foot .privacy .link{margin-left:6px;font-size:inherit}
 .agree .must{white-space:nowrap}
+
+/* 付録：不動産業務のGAS化判定 */
+#furoku{--j1:var(--h-sheet);--j2:var(--h-cal);--j3:var(--h-drive);--j4:var(--rule)}
+.fx-kicker{margin:0;font-weight:700;letter-spacing:.2em;color:var(--leaf);font-size:13px}
+.fx-h{margin:36px 0 12px;font-size:var(--t-lg)}
+.fx-note{margin:-4px 0 14px;color:var(--ink-2);font-size:var(--t-sm)}
+.fx-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.fx-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fx-kpi{background:var(--sheet);border:1.5px solid var(--ink);border-radius:6px;padding:14px 16px;display:grid;gap:2px;min-width:0}
+.fx-kpi.main{background:var(--leaf-soft);border-width:2px}
+.fx-kpi .k{font-size:13px;color:var(--ink-2);font-weight:700}
+.fx-kpi .v{font-family:var(--f-display);font-size:34px;line-height:1.2}
+.fx-kpi .v small{font-family:inherit;font-size:14px;margin-left:4px;color:var(--ink-2)}
+.fx-kpi .d{font-size:12px;color:var(--ink-2)}
+.fx-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px;font-size:13px;color:var(--ink-2)}
+.fx-legend>span{display:inline-flex;gap:8px;align-items:center}
+.jb{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:4px;font-weight:700;font-size:14px;color:#fff;flex:none}
+.jb.j1{background:var(--j1)}.jb.j2{background:var(--j2)}.jb.j3{background:var(--j3)}.jb.j4{background:var(--j4);color:var(--ink)}
+.fx-doms{background:var(--sheet);border:1.5px solid var(--ink);border-radius:6px;padding:6px 16px}
+.fx-row{display:grid;grid-template-columns:minmax(0,13em) minmax(0,1fr) 7.5em 9em;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule-2)}
+.fx-row:last-child{border-bottom:0}
+.fx-headrow{font-size:12px;color:var(--ink-2);font-weight:700}
+.fx-dom{font-weight:700;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.fx-dom small,.fx-num small{font-weight:400;color:var(--ink-2);font-size:12px}
+.fx-stack{display:grid;gap:3px;min-width:0}
+.fx-bar{display:flex;height:14px;border-radius:3px;overflow:hidden;background:var(--rule-2)}
+.fx-bar i{display:block;height:100%}
+.fx-bar i+i{box-shadow:inset 2px 0 0 var(--sheet)}
+.fx-bar .j1{background:var(--j1)}.fx-bar .j2{background:var(--j2)}.fx-bar .j3{background:var(--j3)}.fx-bar .j4{background:var(--j4)}
+.fx-lab{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.fx-num{font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:8px}
+.fx-rate{flex:1;height:6px;background:var(--rule-2);border-radius:3px;overflow:hidden}
+.fx-rate i{display:block;height:100%;background:var(--ink)}
+@media (max-width:700px){
+  .fx-row{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}
+  .fx-headrow{display:none}
+  .fx-stack{grid-column:1/-1;order:3}
+  .fx-num:last-child{grid-column:1/-1;order:4}
+}
+.fx-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.fx-pick{background:var(--sheet);border:1.5px solid var(--ink);border-left:8px solid var(--j1);border-radius:6px;padding:14px 16px;display:grid;gap:8px;align-content:start;min-width:0}
+.fx-pick-top{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink-2)}
+.fx-no{font-weight:700;color:var(--ink)}
+.fx-pick h4{margin:0;font-size:16px;line-height:1.5}
+.fx-pick p{margin:0;font-size:13px;color:var(--ink-2)}
+.fx-meta{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+.fx-big{font-family:var(--f-display);font-size:26px;color:var(--leaf);line-height:1}
+.fx-big small{font-size:13px}
+.fx-svc{margin-left:auto}
+.fx-spec{font-size:13px;font-weight:700;color:var(--leaf)}
+.fx-pick .btn{justify-self:start}
+.fx-all summary{gap:12px}
+.fx-sum{font-weight:400;font-size:12px;color:var(--ink-2)}
+.fx-all .tbl{padding:0 12px 12px}
+.fx-all table{min-width:760px}
+.fx-all td{vertical-align:top;line-height:1.6}
+.fx-c{text-align:center !important;white-space:nowrap}
+.fx-cta{margin-top:28px;padding:18px 20px;border:2px solid var(--ink);border-radius:6px;background:var(--leaf-soft);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.fx-cta p{margin:0;max-width:40em}
+.fx-all{grid-template-columns:minmax(0,1fr)}.fx-all details,.fx-all .tbl{min-width:0}

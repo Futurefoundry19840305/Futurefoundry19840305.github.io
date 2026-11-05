@@ -320,7 +320,7 @@
   const dlg = $('dlg'), form = $('reqForm'), msg = $('formMsg'), sendBtn = $('sendBtn');
   let openedAt = 0;
   const show = (v) => [form, $('doneView'), $('offView')].forEach((x) => { x.hidden = x !== v; });
-  const placeOf = (el) => !el ? 'その他' : el.closest('#theater') ? '観察窓' : el.closest('#plate') ? '標本の詳細' : el.closest('.top') ? 'ヘッダー' : el.closest('.hero') ? 'ヒーロー' : el.closest('.empty') ? '検索0件' : el.closest('#mine') ? 'あなたの依頼' : el.closest('#price') ? '料金' : 'その他';
+  const placeOf = (el) => !el ? 'その他' : el.closest('#theater') ? '観察窓' : el.closest('#plate') ? '標本の詳細' : el.closest('.top') ? 'ヘッダー' : el.closest('.hero') ? 'ヒーロー' : el.closest('.empty') ? '検索0件' : el.closest('#mine') ? 'あなたの依頼' : el.closest('#price') ? '料金' : el.closest('#furoku') ? '付録' : 'その他';
   function openReq(ref, from) {
     T.ev('req_open', placeOf(from));
     if (plate.open) plate.close();
