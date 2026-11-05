@@ -804,7 +804,7 @@ window.ZUKAN = {
    "d": "問い合わせメールをAI（Gemini API）に読ませて種類分けと1行要約をし、ラベルとシートに残します。",
    "lv": 3,
    "use": "問い合わせ窓口のメールが多く、急ぎ・担当ごとに振り分ける手間を減らしたいときに。",
-   "code": "// まだ処理していない問い合わせメールを、AI（Gemini API）で分類・要約してラベルとシートに残す\nconst MODEL = 'gemini-2.5-flash';                            // 使うモデル名（最新の名前に合わせる）\nfunction triageMail() {\n  const key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');   // キーはコードに書かない\n  const sh = SpreadsheetApp.getActive().getSheetByName('問い合わせ');\n  const doneLabel = GmailApp.getUserLabelByName('AI済み') || GmailApp.createLabel('AI済み');\n  GmailApp.search('to:info@example.com -label:AI済み newer_than:2d', 0, 20).forEach((th) => {\n    const m = th.getMessages()[0];\n    const prompt = '次のメールを「見積」「不具合」「請求」「その他」のどれかに分類し、1行で要約してください。' +\n      'JSONで {\"cat\":\"\",\"sum\":\"\"} だけを返してください。\\n\\n' + m.getPlainBody().slice(0, 3000);\n    const res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent', {\n      method: 'post', contentType: 'application/json', headers: { 'x-goog-api-key': key },\n      payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } }),\n    });\n    const ai = JSON.parse(JSON.parse(res.getContentText()).candidates[0].content.parts[0].text);\n    const label = 'AI/' + ai.cat;\n    th.addLabel(GmailApp.getUserLabelByName(label) || GmailApp.createLabel(label)).addLabel(doneLabel);\n    sh.appendRow([m.getDate(), m.getFrom(), m.getSubject(), ai.cat, ai.sum]);\n  });\n}",
+   "code": "// まだ処理していない問い合わせメールを、AI（Gemini API）で分類・要約してラベルとシートに残す\nconst MODEL = 'gemini-3.8-flash';                            // 使うモデル名（Googleの「Gemini のモデル」ページで最新の名前を確認）\nfunction triageMail() {\n  const key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');   // キーはコードに書かない\n  const sh = SpreadsheetApp.getActive().getSheetByName('問い合わせ');\n  const doneLabel = GmailApp.getUserLabelByName('AI済み') || GmailApp.createLabel('AI済み');\n  GmailApp.search('to:info@example.com -label:AI済み newer_than:2d', 0, 20).forEach((th) => {\n    const m = th.getMessages()[0];\n    const prompt = '次のメールを「見積」「不具合」「請求」「その他」のどれかに分類し、1行で要約してください。' +\n      'JSONで {\"cat\":\"\",\"sum\":\"\"} だけを返してください。\\n\\n' + m.getPlainBody().slice(0, 3000);\n    const res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent', {\n      method: 'post', contentType: 'application/json', headers: { 'x-goog-api-key': key },\n      payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } }),\n    });\n    const ai = JSON.parse(JSON.parse(res.getContentText()).candidates[0].content.parts[0].text);\n    const label = 'AI/' + ai.cat;\n    th.addLabel(GmailApp.getUserLabelByName(label) || GmailApp.createLabel(label)).addLabel(doneLabel);\n    sh.appendRow([m.getDate(), m.getFrom(), m.getSubject(), ai.cat, ai.sum]);\n  });\n}",
    "save": {
     "man": 2,
     "per": 1200,
@@ -815,7 +815,7 @@ window.ZUKAN = {
    "tips": [
     "APIキーはコードに書かず、「プロジェクトの設定」→「スクリプト プロパティ」に GEMINI_API_KEY として保存します。キーは公開の場所に置かないでください。",
     "メールの本文を外部のAIに送ることになります。お客さまの個人情報の扱いについて、社内のルールや利用規約を確かめてから使ってください。",
-    "AIの分類はまちがえることがあります。最初は「分類の提案」として使い、人が確かめる運用にします。モデル名は最新のものに合わせてください。"
+    "AIの分類はまちがえることがあります。最初は「分類の提案」として使い、人が確かめる運用にします。モデル名は入れ替わります（例：2.5 世代は新しく使い始める人には提供されていません）。使う前に Google の案内で最新の名前を確認してください。"
    ]
   },
   {
