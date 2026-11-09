@@ -114,7 +114,7 @@
   const SPEC = Z.specimens.map((x, i) => ({ ...x, n: i + 1, no: 'No.' + String(i + 1).padStart(3, '0') }));
   const LV = ['', 'かんたん', 'ふつう', 'ちょい難'];
   const lvDots = (lv) => `<span class="lv" aria-label="難しさ：${LV[lv]}">${[1, 2, 3].map((k) => `<i class="${k <= lv ? 'on' : ''}"></i>`).join('')}</span>`;
-  const priceOf = (lv) => (lv === 1 ? '3,000円〜' : 'お見積り');
+  const priceOf = () => '要相談';   // 料金はすべて要相談
   /* 時間削減のめやす */
   const saveMin = (x) => x.save.man * x.save.per;
   const fmtSave = (x) => { const m = saveMin(x); return m < 60 ? `約${Math.round(m)}分` : `約${Math.round(m / 60)}時間`; };

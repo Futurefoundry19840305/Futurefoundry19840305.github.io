@@ -26,7 +26,6 @@ const DEALS = ['未確定', '契約', '継続依頼', '保留', '失注']; // �
 const WON = ['契約', '継続依頼'];
 const COL = { date: 1, id: 2, status: 3, name: 4, contact: 5, plan: 6, want: 8, deal: 13, amount: 14, decided: 15, source: 16 };
 // 単発の依頼に最初に入れておく金額（見積もりに合わせて書き換える）
-const DEFAULT_PRICE = 3000;
 // 記事のネタを毎朝書き出すGoogleドキュメント（「ラクガス図鑑 note下書き」フォルダ内・作成済み）
 const TOPICS_DOC_ID = '1DeaOWncaTYEvBv7VfKNAX-Ui5LszjHD0BypQefftIvE';
 
@@ -103,7 +102,7 @@ function doPost(e) {
   try {
     // 先頭が「=」などだと数式として動くため、文字として保存する
     const safe = (v) => (typeof v === 'string' && /^[=+\-@]/.test(v) ? "'" + v : v);
-    const price = /^単発/.test(row.plan) ? DEFAULT_PRICE : '';   // 要相談は空欄（任意で入力）
+    const price = '';   // 料金はすべて要相談。金額は見積り・契約が決まったら入力する
     sheet_().appendRow([row.date, row.id, row.status, row.name, row.contact, row.plan, row.services, row.want, row.freq, row.due, row.ref, '', '未確定', price, '', row.source].map(safe));
   } finally {
     lock.releaseLock();
@@ -155,7 +154,7 @@ function doGet(e) {
 function testRequest() {
   guardAdmin_();
   const res = doPost({ postData: { contents: JSON.stringify({
-    name: 'テスト 太郎', contact: 'test@example.com', plan: '単発の作成（3,000円〜）',
+    name: 'テスト 太郎', contact: 'test@example.com', plan: '単発の作成（要相談）',
     services: ['スプレッドシート', 'Gmail'], want: 'これはテストです。毎月1日に経費を集計してメールで送りたい。',
     freq: '毎月', due: 'いつでも', ref: 'No.001 表のデータを自動で集計する', elapsed: 10000,
   }) } });
