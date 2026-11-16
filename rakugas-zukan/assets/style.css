@@ -472,3 +472,13 @@ dialog.fx-drawer[open]{animation:fx-in .22s ease-out}
 .fx-body{padding:24px 28px 40px}
 .fx-body .sec-head{margin-bottom:20px}
 @media (max-width:560px){dialog.fx-drawer{border-left-width:0;box-shadow:none}.fx-bar-top{padding:12px 56px 12px 16px}.fx-bar-top h2{font-size:20px}.fx-body{padding:18px 16px 32px}}
+
+/* ブラッシュアップ（2026-11-16）：スキップリンク・タップしやすさ・日本語の改行 */
+.skip{position:absolute;left:12px;top:-60px;z-index:100;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:4px;font-weight:700;text-decoration:none}
+.skip:focus{top:12px}
+.tbl:focus-visible{outline:3px solid var(--leaf);outline-offset:2px}
+@media (pointer:coarse){
+  .btn.small,.hab,.th-tab,.sort select,.copy{min-height:44px}
+  .logo{min-height:44px}
+}
+h1,h2,h3,.label h3,.fx-pick h4{word-break:auto-phrase}

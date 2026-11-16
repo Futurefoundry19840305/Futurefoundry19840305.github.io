@@ -10,7 +10,18 @@
 <meta property="og:title" content="ラクガス図鑑">
 <meta property="og:description" content="Googleの面倒を、GASでラクにする56の方法。動くデモとコード例つき。">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#1a2747">
+<meta property="og:url" content="https://futurefoundry19840305.github.io/rakugas-zukan/">
+<meta property="og:site_name" content="ラクガス図鑑">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ラクガス図鑑：Googleの面倒を、GASでラクにする56の方法">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"ラクガス図鑑","url":"https://futurefoundry19840305.github.io/rakugas-zukan/","description":"Google Apps Script（GAS）でできる自動化を56種の標本として紹介。図解・動くデモ・コード例つき。","inLanguage":"ja"}</script>
+<meta name="theme-color" content="#1a2747" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11191d" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://futurefoundry19840305.github.io/rakugas-zukan/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2317784a'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3Cpath d='M16 5v4M16 23v4M5 16h4M23 16h4M8.2 8.2l2.8 2.8M21 21l2.8 2.8M8.2 23.8l2.8-2.8M21 11l2.8-2.8' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +29,7 @@
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
+<a class="skip" href="#top">本文へスキップ</a>
 
 <header class="top">
   <div class="wrap">
@@ -128,9 +140,9 @@
       </div>
       <div class="menu">
         <div class="menu-row main"><div class="menu-name">レベル1　かんたん</div><div class="menu-price">要相談</div>
-          <p class="menu-desc"><span class="lv" aria-label="難しさ1"><i class="on"></i><i></i><i></i></span>図鑑の標本をもとに、あなたのシートやメールに合わせて作ります。表の集計、フォームへの自動返信、毎日のバックアップなど、1つの作業の自動化。</p></div>
+          <p class="menu-desc"><span class="lv" role="img" aria-label="難しさ1"><i class="on"></i><i></i><i></i></span>図鑑の標本をもとに、あなたのシートやメールに合わせて作ります。表の集計、フォームへの自動返信、毎日のバックアップなど、1つの作業の自動化。</p></div>
         <div class="menu-row"><div class="menu-name">レベル2・3　ふつう〜ちょい難</div><div class="menu-price">要相談</div>
-          <p class="menu-desc"><span class="lv" aria-label="難しさ2から3"><i class="on"></i><i class="on"></i><i class="on"></i></span>PDFを作ってメールで送る、LINEに通知する、Webアプリを作るなど、いくつかのサービスを組み合わせる自動化。</p></div>
+          <p class="menu-desc"><span class="lv" role="img" aria-label="難しさ2から3"><i class="on"></i><i class="on"></i><i class="on"></i></span>PDFを作ってメールで送る、LINEに通知する、Webアプリを作るなど、いくつかのサービスを組み合わせる自動化。</p></div>
         <div class="menu-row"><div class="menu-name">継続サポート・業務改善</div><div class="menu-price">要相談</div>
           <p class="menu-desc">作ったあとの修正や機能追加、運用中のトラブル対応、手作業の洗い出しから自動化の計画づくりまで。続けてのお手伝いはご相談ください。</p></div>
       </div>
@@ -167,7 +179,7 @@
             <div class="mock-ed">
               <div class="mock-side"><span data-i="doc"></span><span class="on" data-i="clock"></span><span class="pin">5</span></div>
               <div class="mock-code"><div class="mock-btns"><span>保存</span><span class="pin">3</span><span class="run">▶ 実行</span><span class="pin">4</span></div>
-<pre>function myFunction() {
+<pre translate="no">function myFunction() {
   // ここに標本のコードを貼り付け
 }</pre></div>
             </div>
@@ -576,7 +588,7 @@
       <label for="f-agree"><input type="checkbox" id="f-agree" name="agree" required aria-describedby="agreeHint"><span><button class="link" type="button" data-privacy>個人情報の取り扱い</button>に同意します<span class="must">必須</span></span></label>
       <p class="hint" id="agreeHint">お名前・連絡先・ご依頼の内容は、ご返信とお見積り・作成のためだけに使います。</p>
     </div>
-    <p class="msg err" id="formMsg" hidden></p>
+    <p class="msg err" id="formMsg" role="alert" hidden></p>
     <div class="actions"><button class="btn" type="button" data-close>閉じる</button><button class="btn primary" type="submit" id="sendBtn">同意して依頼を送る</button></div>
   </form>
   <div class="form" id="doneView" hidden>

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /rakugas-zukan/gas/
+
+Sitemap: https://futurefoundry19840305.github.io/sitemap.xml

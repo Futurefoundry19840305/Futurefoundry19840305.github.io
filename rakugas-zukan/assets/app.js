@@ -113,7 +113,7 @@
   const hab = (s) => HAB[s] || { c: '--ink', i: 'gear' };
   const SPEC = Z.specimens.map((x, i) => ({ ...x, n: i + 1, no: 'No.' + String(i + 1).padStart(3, '0') }));
   const LV = ['', 'かんたん', 'ふつう', 'ちょい難'];
-  const lvDots = (lv) => `<span class="lv" aria-label="難しさ：${LV[lv]}">${[1, 2, 3].map((k) => `<i class="${k <= lv ? 'on' : ''}"></i>`).join('')}</span>`;
+  const lvDots = (lv) => `<span class="lv" role="img" aria-label="難しさ：${LV[lv]}">${[1, 2, 3].map((k) => `<i class="${k <= lv ? 'on' : ''}"></i>`).join('')}</span>`;
   const priceOf = () => '要相談';   // 料金はすべて要相談
   /* 時間削減のめやす */
   const saveMin = (x) => x.save.man * x.save.per;
@@ -220,7 +220,7 @@
           <p class="saving-note">1回の手作業時間と回数から計算した、めやすです。</p>
         </div>
         <h3>コード例</h3>
-        <div class="code-wrap"><pre><code>${esc(x.code)}</code></pre><button class="copy" type="button" data-copy="${x.n}">コピー</button></div>
+        <div class="code-wrap"><pre translate="no"><code>${esc(x.code)}</code></pre><button class="copy" type="button" data-copy="${x.n}">コピー</button></div>
         <p class="cnote">${esc(cnote(x.code))}</p>
       </div>
       <div class="plate-foot"><button class="btn" type="button" data-close>閉じる</button><button class="btn primary" type="button" data-ref="${esc(x.no + ' ' + x.t)}">これに近いものを依頼する（${priceOf(x.lv)}）</button></div>`;
@@ -335,6 +335,13 @@
     const c = e.target.closest('[data-close]'); if (c) { const d = c.closest('dialog'); if (d) d.close(); }
     const g = e.target.closest('[data-goto]'); if (g) { const t = $(g.dataset.goto); if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); }
   });
+  /* 横にスクロールする表：キーボードでも動かせるようにする */
+  document.querySelectorAll('.tbl').forEach((el) => {
+    el.tabIndex = 0; el.setAttribute('role', 'region');
+    const h = el.closest('details') ? el.closest('details').querySelector('summary') : null;
+    el.setAttribute('aria-label', (h ? h.textContent.trim().slice(0, 40) + '：' : '') + '表（横にスクロールできます）');
+  });
+
   /* 付録：業界別（右端のタブから引き出しのように開く） */
   const FX = { 'furoku': '付録：不動産業界', 'furoku-hotel': '付録：旅館・ホテル', 'furoku-food': '付録：飲食店' };
   const drawers = Object.keys(FX).map((id) => $(id)).filter(Boolean);
@@ -383,7 +390,7 @@
     e.preventDefault();
     const d = collect(), miss = [];
     if (!d.name) miss.push('お名前'); if (!d.contact) miss.push('連絡先'); if (!d.want) miss.push('自動化したいこと');
-    if (miss.length) { msg.textContent = miss.join('・') + 'を入力してください。'; msg.hidden = false; return; }
+    if (miss.length) { msg.textContent = miss.join('・') + 'を入力してください。'; msg.hidden = false; $({ 'お名前': 'f-name', '連絡先': 'f-contact', '自動化したいこと': 'f-want' }[miss[0]]).focus(); return; }
     if (!d.agree) { msg.textContent = '「個人情報の取り扱い」をお読みいただき、同意のチェックを入れてください。'; msg.hidden = false; $('f-agree').focus(); return; }
     msg.hidden = true;
     if (!CFG.gasUrl) return offline(d, '受付窓口の準備中です。お手数ですが、下の依頼文をコピーしてメールなどで送ってください。');
@@ -394,7 +401,7 @@
       const body = await res.json().catch(() => ({}));
       if (body.ok && body.id) { T.ev('req_submit', d.plan, 1); saveMine([...loadMine(), body.id]); form.reset(); show($('doneView')); drawMine(); }
       else if (body.error === 'invalid') { msg.textContent = body.message || '入力内容を確認してください。'; msg.hidden = false; }
-      else if (body.error === 'busy') { msg.textContent = '送信が集中しています。1分ほどおいて、もう一度「依頼を送る」を押してください。'; msg.hidden = false; }
+      else if (body.error === 'busy') { msg.textContent = '送信が集中しています。1分ほどおいて、もう一度「同意して依頼を送る」を押してください。'; msg.hidden = false; }
       else { T.ev('req_submit', d.plan, 0); offline(d); }
     } catch (err) { T.ev('req_submit', d.plan, 0); offline(d); }
     finally { sendBtn.disabled = false; sendBtn.textContent = '依頼を送る'; }
