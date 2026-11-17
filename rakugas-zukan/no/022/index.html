@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>他のサービスからデータを受け取る【GASのコード例つき】｜ラクガス図鑑 No.022</title>
+<meta name="description" content="外部から送られたデータを受け取り、シートに保存します。ECサイトの注文通知を受け取り記録。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約40時間）を紹介します。">
+<link rel="canonical" href="https://futurefoundry19840305.github.io/rakugas-zukan/no/022/">
+<meta property="og:title" content="No.022 他のサービスからデータを受け取る｜ラクガス図鑑">
+<meta property="og:description" content="外部から送られたデータを受け取り、シートに保存します。ECサイトの注文通知を受け取り記録。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約40時間）を紹介します。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://futurefoundry19840305.github.io/rakugas-zukan/no/022/">
+<meta property="og:site_name" content="ラクガス図鑑">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1a2747" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11191d" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2317784a'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preload" href="../../assets/fonts/dela-gothic-one-subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"他のサービスからデータを受け取る","description":"外部から送られたデータを受け取り、シートに保存します。ECサイトの注文通知を受け取り記録。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約40時間）を紹介します。","inLanguage":"ja","url":"https://futurefoundry19840305.github.io/rakugas-zukan/no/022/","mainEntityOfPage":"https://futurefoundry19840305.github.io/rakugas-zukan/no/022/","image":"https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png","about":{"@type":"SoftwareApplication","name":"Google Apps Script","applicationCategory":"DeveloperApplication"},"proficiencyLevel":"Expert","isPartOf":{"@type":"WebSite","name":"ラクガス図鑑","url":"https://futurefoundry19840305.github.io/rakugas-zukan/"},"hasPart":{"@type":"SoftwareSourceCode","programmingLanguage":"Google Apps Script","text":"function doPost(e){\n  const data = JSON.parse(e.postData.contents);\n  SpreadsheetApp.openById('シートID').getSheets()[0]\n    .appendRow([new Date(), data.item, data.price]);\n  return ContentService.createTextOutput('OK');\n}"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ラクガス図鑑","item":"https://futurefoundry19840305.github.io/rakugas-zukan/"},{"@type":"ListItem","position":2,"name":"Webアプリ"},{"@type":"ListItem","position":3,"name":"No.022","item":"https://futurefoundry19840305.github.io/rakugas-zukan/no/022/"}]}]}</script>
+<script src="../../assets/config.js" defer></script>
+<script src="../../assets/page.js" defer></script>
+</head>
+<body class="sub ">
+<a class="skip" href="#main">本文へスキップ</a>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../"><span class="logo-mark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>ラクガス図鑑</a>
+    <nav class="nav" aria-label="サイト内の移動">
+      <a class="nav-link" href="../../#zukan">標本の一覧</a>
+      <a class="nav-link" href="../../#price">料金</a>
+      <a class="nav-link" href="../../#guide">はじめ方</a>
+      <a class="btn primary small" href="../../#request" data-req-link>作成を依頼する</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="現在の場所"><ol><li><a href="../../">ラクガス図鑑</a></li><li><a href="../../#zukan">Webアプリ</a></li><li aria-current="page">No.022</li></ol></nav>
+
+    <article class="sheetpage" style="--hc:var(--h-web)">
+      <header class="sp-head">
+        <p class="label-top"><span class="label-no">No.022</span><span class="label-hab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18M6 6h.01M8.5 6h.01"/></svg>Webアプリ</span></p>
+        <h1>他のサービスからデータを受け取る</h1>
+        <p class="sp-lead">外部から送られたデータを受け取り、シートに保存します。</p>
+        <dl class="sp-facts">
+          <div><dt>年間の時間削減</dt><dd><b>約40時間</b></dd></div>
+          <div><dt>難しさ</dt><dd><span class="lv" role="img" aria-label="難しさ：ちょい難"><i class="on"></i><i class="on"></i><i class="on"></i></span> ちょい難</dd></div>
+          <div><dt>動くきっかけ</dt><dd>アクセス時</dd></div>
+        </dl>
+      </header>
+      <div class="sp-body">
+        <div class="flow" role="img" aria-label="流れ：アクセス時、GAS、シート"><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18M6 6h.01M8.5 6h.01"/></svg>アクセス時</span><span class="arr" aria-hidden="true">▸</span><span class="node g"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>GAS</span><span class="arr" aria-hidden="true">▸</span><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/></svg>シート</span></div>
+        <section><h2>こんな時に便利</h2><p>ECサイトの注文通知を受け取り記録。</p></section>
+        
+        <section><h2>時間削減のめやす</h2>
+          <div class="saving">
+            <div class="saving-row"><span class="saving-k">いまの手作業</span><span>注文通知を見て表に転記</span></div>
+            <div class="saving-row"><span class="saving-k">1回あたり</span><span>約2分 × 月100件</span></div>
+            <div class="saving-row"><span class="saving-k">GASなら</span><span>ほぼ自動（数秒〜1分）</span></div>
+            <div class="saving-total"><span>年間</span><b>約40時間</b><span>の削減</span></div>
+            <p class="saving-note">1回の手作業時間と回数から計算した、めやすです。</p>
+          </div>
+        </section>
+        <section><h2>コード例</h2>
+          <div class="code-wrap"><pre translate="no" tabindex="0" aria-label="コード例"><code>function doPost(e){
+  const data = JSON.parse(e.postData.contents);
+  SpreadsheetApp.openById(&#39;シートID&#39;).getSheets()[0]
+    .appendRow([new Date(), data.item, data.price]);
+  return ContentService.createTextOutput(&#39;OK&#39;);
+}</code></pre><button class="copy" type="button" data-copy-code hidden>コピー</button></div>
+          <p class="cnote">見本のコードです。「〜ID」を自分のものに書き換え、テスト用のデータで試してから使ってください。</p>
+        </section>
+        <section><h2>試し方</h2>
+          <ol class="sp-steps"><li>Googleスプレッドシートを開く</li><li>メニューの「拡張機能」→「Apps Script」を選ぶ</li><li>コードを貼り付けて保存する（Ctrl＋S）</li><li>「実行」を押す（初回だけ許可の確認が出ます）</li><li>自動で動かすなら、左の時計マーク「トリガー」で時間を設定する</li></ol>
+          <p class="muted">うまく動かないときは、<a href="../../#cautions">使う前に知っておきたいこと</a>を確認してください。</p>
+        </section>
+        <aside class="sp-cta">
+          <p><b>自分の業務に合わせて作ってほしい場合は</b>、この標本をもとに作成を依頼できます。料金は内容を伺ってからお見積りします。</p>
+          <a class="btn primary" href="../../?ref=No.022%20%E4%BB%96%E3%81%AE%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E3%81%8B%E3%82%89%E3%83%87%E3%83%BC%E3%82%BF%E3%82%92%E5%8F%97%E3%81%91%E5%8F%96%E3%82%8B#request" data-req-link data-ref="No.022 他のサービスからデータを受け取る"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.5l7 3 3 7.5z"/><path d="m10 13.5 4.5-4.5"/></svg>これに近いものを依頼する</a>
+        </aside>
+      </div>
+    </article>
+    <nav class="sp-more" aria-label="ほかの標本">
+      <h2>Webアプリのほかの標本</h2><ul class="sp-near"><li><a href="../045/"><span class="label-no">No.045</span>申請をメールで承認してもらう</a></li><li><a href="../046/"><span class="label-no">No.046</span>スマホで押せる打刻ボタン</a></li><li><a href="../021/"><span class="label-no">No.021</span>簡単なWebページを公開</a></li></ul>
+      <p class="sp-pn"><a href="../021/" rel="prev"><span>前の標本</span>No.021 簡単なWebページを公開</a><a href="../023/" rel="next"><span>次の標本</span>No.023 毎日・毎週決まった時間に実行</a></p>
+      <p><a class="btn" href="../../#zukan"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>56種の標本の一覧へ</a></p>
+    </nav>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <a class="logo" href="../../"><span class="logo-mark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>ラクガス図鑑</a>
+    <span>コード例は見本です。ご利用は自己責任でお願いします。</span>
+    <span class="privacy">サイトの改善のため、個人を特定しない形で、どのページが見られたかを記録しています。ブラウザの「トラッキング拒否」を有効にしている場合は記録しません。</span>
+  </div>
+</footer>
+</body>
+</html>

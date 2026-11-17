@@ -181,14 +181,12 @@
     $('count').textContent = `${list.length}種の標本`;
     $('specimens').innerHTML = list.length ? list.map((x) => {
       const h = hab(x.s);
-      return `<button class="label" type="button" data-n="${x.n}" style="--hc:var(${h.c})" aria-label="${esc(x.no + ' ' + x.t)}の詳細を開く">
+      return `<a class="label" href="no/${String(x.n).padStart(3, '0')}/" data-n="${x.n}" style="--hc:var(${h.c})">
         <span class="label-top"><span class="label-no">${x.no}${x.adv ? '<span class="adv-tag">応用</span>' : ''}</span><span class="label-hab">${ic(h.i)}${esc(x.s)}</span></span>
         <h3>${esc(x.t)}</h3>
-        <p class="desc">${esc(x.d)}</p>
-        ${flow(x)}
-        ${saveBadge(x)}
-        <span class="label-meta"><span>難しさ ${lvDots(x.lv)} ${LV[x.lv]}</span><span class="price-tag">依頼 ${priceOf(x.lv)}</span></span>
-      </button>`;
+        <span class="desc">${esc(x.d)}</span>
+        <span class="label-foot"><span class="label-save"><small>年間の削減</small><b>${fmtSave(x)}</b></span><span class="label-lv">${lvDots(x.lv)}${LV[x.lv]}</span></span>
+      </a>`;
     }).join('') : `<div class="empty"><p>「${esc(q)}」に当てはまる標本は見つかりませんでした。</p><p class="muted">別の言葉で探すか、そのまま作成をご相談ください。</p><p><button class="btn small" type="button" data-open-req>作成を相談する</button></p></div>`;
   }
   renderList();
@@ -220,17 +218,21 @@
           <p class="saving-note">1回の手作業時間と回数から計算した、めやすです。</p>
         </div>
         <h3>コード例</h3>
-        <div class="code-wrap"><pre translate="no"><code>${esc(x.code)}</code></pre><button class="copy" type="button" data-copy="${x.n}">コピー</button></div>
+        <div class="code-wrap"><pre translate="no" tabindex="0" aria-label="コード例"><code>${esc(x.code)}</code></pre><button class="copy" type="button" data-copy="${x.n}">コピー</button></div>
         <p class="cnote">${esc(cnote(x.code))}</p>
       </div>
-      <div class="plate-foot"><button class="btn" type="button" data-close>閉じる</button><button class="btn primary" type="button" data-ref="${esc(x.no + ' ' + x.t)}">これに近いものを依頼する（${priceOf(x.lv)}）</button></div>`;
+      <div class="plate-foot"><span class="plate-foot-l"><button class="btn" type="button" data-close>閉じる</button><a class="link" href="no/${String(x.n).padStart(3, '0')}/">この標本のページ</a></span><button class="btn primary" type="button" data-ref="${esc(x.no + ' ' + x.t)}">これに近いものを依頼する（${priceOf(x.lv)}）</button></div>`;
     if (!plate.open) { try { plate.showModal(); } catch (e) { plate.setAttribute('open', ''); } }
     T.ev('spec_open', x.no + ' ' + x.t);
     if (!fromHash) history.replaceState(null, '', '#no-' + String(n).padStart(3, '0'));
   }
   function clearHash() { if (/^#no-\d{3}$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
   plate.addEventListener('close', clearHash);
-  $('specimens').addEventListener('click', (e) => { const b = e.target.closest('.label'); if (b) openPlate(+b.dataset.n); });
+  // カードは個別ページへのリンク。普通にクリックしたときは、その場で詳細を開く（新しいタブで開く操作はそのまま）
+  $('specimens').addEventListener('click', (e) => {
+    const b = e.target.closest('.label'); if (!b || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault(); openPlate(+b.dataset.n);
+  });
   function fromHash() { const m = location.hash.match(/^#no-(\d{3})$/); if (m) openPlate(+m[1], true); }
   addEventListener('hashchange', fromHash); fromHash();
 
@@ -321,8 +323,8 @@
   let openedAt = 0;
   const show = (v) => [form, $('doneView'), $('offView')].forEach((x) => { x.hidden = x !== v; });
   const placeOf = (el) => !el ? 'その他' : el.closest('#theater') ? '観察窓' : el.closest('#plate') ? '標本の詳細' : el.closest('.top') ? 'ヘッダー' : el.closest('.hero') ? 'ヒーロー' : el.closest('.empty') ? '検索0件' : el.closest('#mine') ? 'あなたの依頼' : el.closest('#price') ? '料金' : el.closest('.fx-drawer') ? '付録' : 'その他';
-  function openReq(ref, from) {
-    T.ev('req_open', placeOf(from));
+  function openReq(ref, from, place) {
+    T.ev('req_open', place || placeOf(from));
     if (plate.open) plate.close();
     show(form); msg.hidden = true; openedAt = Date.now();
     if (ref != null) $('f-ref').value = ref;
@@ -335,26 +337,45 @@
     const c = e.target.closest('[data-close]'); if (c) { const d = c.closest('dialog'); if (d) d.close(); }
     const g = e.target.closest('[data-goto]'); if (g) { const t = $(g.dataset.goto); if (t) t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); }
   });
-  /* 横にスクロールする表：キーボードでも動かせるようにする */
-  document.querySelectorAll('.tbl').forEach((el) => {
-    el.tabIndex = 0; el.setAttribute('role', 'region');
-    const h = el.closest('details') ? el.closest('details').querySelector('summary') : null;
-    el.setAttribute('aria-label', (h ? h.textContent.trim().slice(0, 40) + '：' : '') + '表（横にスクロールできます）');
-  });
 
   /* 付録：業界別（右端のタブから引き出しのように開く） */
   const FX = { 'furoku': '付録：不動産業界', 'furoku-hotel': '付録：旅館・ホテル', 'furoku-food': '付録：飲食店' };
   const drawers = Object.keys(FX).map((id) => $(id)).filter(Boolean);
+  /* 横にスクロールする表：キーボードでも動かせるようにする */
+  function tblA11y(root) {
+    root.querySelectorAll('.tbl').forEach((el) => {
+      el.tabIndex = 0; el.setAttribute('role', 'region');
+      const h = el.closest('details') ? el.closest('details').querySelector('summary') : null;
+      el.setAttribute('aria-label', (h ? h.textContent.trim().slice(0, 40) + '：' : '') + '表（横にスクロールできます）');
+    });
+  }
+  /* 中身は開いたときに個別ページ（furoku/…/）から読み込む。最初の表示を軽くするため */
+  async function loadFuroku(d) {
+    if (d.dataset.loaded) return;
+    d.dataset.loaded = '1';
+    const box = d.querySelector('.fx-body');
+    try {
+      const res = await fetch(d.dataset.src, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error(res.status);
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      const src = doc.querySelector('.fxpage .fx-body'); if (!src) throw new Error('no body');
+      // 個別ページ用のリンク（../../no/006/）を、この画面の標本の詳細（#no-006）に読み替える
+      src.querySelectorAll('a[href]').forEach((a) => { const m = a.getAttribute('href').match(/^\.\.\/\.\.\/no\/(\d{3})\/$/); if (m) a.setAttribute('href', '#no-' + m[1]); });
+      box.replaceChildren(...[...src.childNodes].map((n) => document.importNode(n, true)));
+      tblA11y(box);
+    } catch (err) { delete d.dataset.loaded; }
+  }
   function openFuroku(id) {
     const d = $(id); if (!d || d.open) return;
     drawers.forEach((x) => { if (x !== d && x.open) x.close(); });
     try { d.showModal(); } catch (err) { d.setAttribute('open', ''); }
     d.querySelector('.fx-panel').scrollTop = 0;
+    loadFuroku(d);
     T.ev('filter', FX[id]);
   }
   document.addEventListener('click', (e) => {
     const t = e.target.closest('[data-furoku]');
-    if (t) { e.preventDefault(); return openFuroku(t.dataset.furoku); }
+    if (t && !(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) { e.preventDefault(); return openFuroku(t.dataset.furoku); }
     // 引き出しの中の「近い標本」や相談ボタンを押したら、引き出しを閉じてから開く
     const inside = e.target.closest('.fx-drawer');
     if (inside && inside.open && e.target.closest('.fx-spec, [data-ref]')) inside.close();
@@ -362,6 +383,15 @@
   drawers.forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
   const fxHash = () => { const id = location.hash.slice(1); if (FX[id]) openFuroku(id); };
   fxHash(); addEventListener('hashchange', fxHash);
+
+  /* 個別ページの「依頼する」から来たとき（?ref=…#request）：依頼フォームを開き、参考にした標本を入れておく */
+  function reqHash() {
+    if (location.hash !== '#request') return;
+    let ref = null;
+    try { ref = new URL(location.href).searchParams.get('ref'); } catch (e) {}
+    history.replaceState(null, '', location.pathname);
+    openReq(ref ? ref.slice(0, 100) : null, null, ref ? '個別ページ' : 'その他');
+  }
 
   /* 個人情報の取り扱い（依頼フォームの上に重ねて開く） */
   const pv = $('privacy');
@@ -404,7 +434,7 @@
       else if (body.error === 'busy') { msg.textContent = '送信が集中しています。1分ほどおいて、もう一度「同意して依頼を送る」を押してください。'; msg.hidden = false; }
       else { T.ev('req_submit', d.plan, 0); offline(d); }
     } catch (err) { T.ev('req_submit', d.plan, 0); offline(d); }
-    finally { sendBtn.disabled = false; sendBtn.textContent = '依頼を送る'; }
+    finally { sendBtn.disabled = false; sendBtn.textContent = '同意して依頼を送る'; }
   });
   $('copyBtn').addEventListener('click', () => {
     const b = $('copyBtn'), box = $('copyText');
@@ -430,4 +460,5 @@
     } catch (e) { el.innerHTML = '<p class="muted">進み具合を読み込めませんでした。少し時間をおいて開き直してください。</p>'; }
   }
   drawMine();
+  reqHash();
 })();

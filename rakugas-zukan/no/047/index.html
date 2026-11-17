@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>予約を受け付けてカレンダーに入れる【GASのコード例つき】｜ラクガス図鑑 No.047</title>
+<meta name="description" content="フォームの希望日時が空いていればカレンダーに登録し、受付・お断りのメールを自動で返します。面談・相談会・レッスンなど、時間枠の予約を受け付けたいときに。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約32時間）を紹介します。">
+<link rel="canonical" href="https://futurefoundry19840305.github.io/rakugas-zukan/no/047/">
+<meta property="og:title" content="No.047 予約を受け付けてカレンダーに入れる｜ラクガス図鑑">
+<meta property="og:description" content="フォームの希望日時が空いていればカレンダーに登録し、受付・お断りのメールを自動で返します。面談・相談会・レッスンなど、時間枠の予約を受け付けたいときに。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約32時間）を紹介します。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://futurefoundry19840305.github.io/rakugas-zukan/no/047/">
+<meta property="og:site_name" content="ラクガス図鑑">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1a2747" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11191d" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2317784a'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preload" href="../../assets/fonts/dela-gothic-one-subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"予約を受け付けてカレンダーに入れる","description":"フォームの希望日時が空いていればカレンダーに登録し、受付・お断りのメールを自動で返します。面談・相談会・レッスンなど、時間枠の予約を受け付けたいときに。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約32時間）を紹介します。","inLanguage":"ja","url":"https://futurefoundry19840305.github.io/rakugas-zukan/no/047/","mainEntityOfPage":"https://futurefoundry19840305.github.io/rakugas-zukan/no/047/","image":"https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png","about":{"@type":"SoftwareApplication","name":"Google Apps Script","applicationCategory":"DeveloperApplication"},"proficiencyLevel":"Expert","isPartOf":{"@type":"WebSite","name":"ラクガス図鑑","url":"https://futurefoundry19840305.github.io/rakugas-zukan/"},"hasPart":{"@type":"SoftwareSourceCode","programmingLanguage":"Google Apps Script","text":"// フォーム送信時：希望日時が空いていればカレンダーに登録し、結果をメールで返す\nfunction onSubmit(e) {\n  const v = e.namedValues;                                   // 質問名で値を取り出す\n  const start = new Date(v['希望日時'][0]);\n  const end = new Date(start.getTime() + 60 * 60 * 1000);    // 1時間枠\n  const to = v['メールアドレス'][0], name = v['お名前'][0];\n  const cal = CalendarApp.getDefaultCalendar();\n  const lock = LockService.getScriptLock();\n  lock.waitLock(20000);                                      // 同時送信による二重予約を防ぐ\n  try {\n    if (cal.getEvents(start, end).length) {\n      GmailApp.sendEmail(to, 'ご予約について', name + ' 様\\nあいにくその時間は埋まっております。別の日時でお申し込みください。');\n      return;\n    }\n    cal.createEvent('予約：' + name, start, end, { description: to });\n    GmailApp.sendEmail(to, 'ご予約を承りました',\n      name + ' 様\\n' + Utilities.formatDate(start, 'Asia/Tokyo', 'M月d日 H:mm') + ' からでお待ちしております。');\n  } finally {\n    lock.releaseLock();\n  }\n}"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ラクガス図鑑","item":"https://futurefoundry19840305.github.io/rakugas-zukan/"},{"@type":"ListItem","position":2,"name":"フォーム"},{"@type":"ListItem","position":3,"name":"No.047","item":"https://futurefoundry19840305.github.io/rakugas-zukan/no/047/"}]}]}</script>
+<script src="../../assets/config.js" defer></script>
+<script src="../../assets/page.js" defer></script>
+</head>
+<body class="sub ">
+<a class="skip" href="#main">本文へスキップ</a>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../"><span class="logo-mark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>ラクガス図鑑</a>
+    <nav class="nav" aria-label="サイト内の移動">
+      <a class="nav-link" href="../../#zukan">標本の一覧</a>
+      <a class="nav-link" href="../../#price">料金</a>
+      <a class="nav-link" href="../../#guide">はじめ方</a>
+      <a class="btn primary small" href="../../#request" data-req-link>作成を依頼する</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="現在の場所"><ol><li><a href="../../">ラクガス図鑑</a></li><li><a href="../../#zukan">フォーム</a></li><li aria-current="page">No.047</li></ol></nav>
+
+    <article class="sheetpage" style="--hc:var(--h-form)">
+      <header class="sp-head">
+        <p class="label-top"><span class="label-no">No.047<span class="adv-tag">応用</span></span><span class="label-hab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h1M11 8h5M8 12h1M11 12h5M8 16h1M11 16h5"/></svg>フォーム</span></p>
+        <h1>予約を受け付けてカレンダーに入れる</h1>
+        <p class="sp-lead">フォームの希望日時が空いていればカレンダーに登録し、受付・お断りのメールを自動で返します。</p>
+        <dl class="sp-facts">
+          <div><dt>年間の時間削減</dt><dd><b>約32時間</b></dd></div>
+          <div><dt>難しさ</dt><dd><span class="lv" role="img" aria-label="難しさ：ちょい難"><i class="on"></i><i class="on"></i><i class="on"></i></span> ちょい難</dd></div>
+          <div><dt>動くきっかけ</dt><dd>送信された時</dd></div>
+        </dl>
+      </header>
+      <div class="sp-body">
+        <div class="flow" role="img" aria-label="流れ：送信された時、GAS、カレンダー・メール"><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.5l7 3 3 7.5z"/><path d="m10 13.5 4.5-4.5"/></svg>送信された時</span><span class="arr" aria-hidden="true">▸</span><span class="node g"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>GAS</span><span class="arr" aria-hidden="true">▸</span><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14h3v3H8z"/></svg>カレンダー</span><span class="arr" aria-hidden="true">▸</span><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>メール</span></div>
+        <section><h2>こんな時に便利</h2><p>面談・相談会・レッスンなど、時間枠の予約を受け付けたいときに。</p></section>
+        <section><h2>応用のポイント</h2><ul class="tips"><li>フォームの回答先スプレッドシートに書き、トリガー「フォーム送信時」で動かします（e.namedValues は質問名で値を取り出せます）。</li><li>同時に2人が同じ枠を申し込んでも二重予約にならないよう、ロック（LockService）で1件ずつ処理します。</li><li>営業時間外や休業日を断る条件を足すと、より実用的になります。</li></ul></section>
+        <section><h2>時間削減のめやす</h2>
+          <div class="saving">
+            <div class="saving-row"><span class="saving-k">いまの手作業</span><span>申込メールを読み、空きを確認して予定を入れ、返信する</span></div>
+            <div class="saving-row"><span class="saving-k">1回あたり</span><span>約8分 × 月20件</span></div>
+            <div class="saving-row"><span class="saving-k">GASなら</span><span>ほぼ自動（数秒〜1分）</span></div>
+            <div class="saving-total"><span>年間</span><b>約32時間</b><span>の削減</span></div>
+            <p class="saving-note">1回の手作業時間と回数から計算した、めやすです。</p>
+          </div>
+        </section>
+        <section><h2>コード例</h2>
+          <div class="code-wrap"><pre translate="no" tabindex="0" aria-label="コード例"><code>// フォーム送信時：希望日時が空いていればカレンダーに登録し、結果をメールで返す
+function onSubmit(e) {
+  const v = e.namedValues;                                   // 質問名で値を取り出す
+  const start = new Date(v[&#39;希望日時&#39;][0]);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);    // 1時間枠
+  const to = v[&#39;メールアドレス&#39;][0], name = v[&#39;お名前&#39;][0];
+  const cal = CalendarApp.getDefaultCalendar();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);                                      // 同時送信による二重予約を防ぐ
+  try {
+    if (cal.getEvents(start, end).length) {
+      GmailApp.sendEmail(to, &#39;ご予約について&#39;, name + &#39; 様\nあいにくその時間は埋まっております。別の日時でお申し込みください。&#39;);
+      return;
+    }
+    cal.createEvent(&#39;予約：&#39; + name, start, end, { description: to });
+    GmailApp.sendEmail(to, &#39;ご予約を承りました&#39;,
+      name + &#39; 様\n&#39; + Utilities.formatDate(start, &#39;Asia/Tokyo&#39;, &#39;M月d日 H:mm&#39;) + &#39; からでお待ちしております。&#39;);
+  } finally {
+    lock.releaseLock();
+  }
+}</code></pre><button class="copy" type="button" data-copy-code hidden>コピー</button></div>
+          <p class="cnote">見本のコードです。自分の環境に合わせて書き換え、テスト用のデータで試してから使ってください。</p>
+        </section>
+        <section><h2>試し方</h2>
+          <ol class="sp-steps"><li>Googleスプレッドシートを開く</li><li>メニューの「拡張機能」→「Apps Script」を選ぶ</li><li>コードを貼り付けて保存する（Ctrl＋S）</li><li>「実行」を押す（初回だけ許可の確認が出ます）</li><li>自動で動かすなら、左の時計マーク「トリガー」で時間を設定する</li></ol>
+          <p class="muted">うまく動かないときは、<a href="../../#cautions">使う前に知っておきたいこと</a>を確認してください。</p>
+        </section>
+        <aside class="sp-cta">
+          <p><b>自分の業務に合わせて作ってほしい場合は</b>、この標本をもとに作成を依頼できます。料金は内容を伺ってからお見積りします。</p>
+          <a class="btn primary" href="../../?ref=No.047%20%E4%BA%88%E7%B4%84%E3%82%92%E5%8F%97%E3%81%91%E4%BB%98%E3%81%91%E3%81%A6%E3%82%AB%E3%83%AC%E3%83%B3%E3%83%80%E3%83%BC%E3%81%AB%E5%85%A5%E3%82%8C%E3%82%8B#request" data-req-link data-ref="No.047 予約を受け付けてカレンダーに入れる"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.5l7 3 3 7.5z"/><path d="m10 13.5 4.5-4.5"/></svg>これに近いものを依頼する</a>
+        </aside>
+      </div>
+    </article>
+    <nav class="sp-more" aria-label="ほかの標本">
+      <h2>フォームのほかの標本</h2><ul class="sp-near"><li><a href="../016/"><span class="label-no">No.016</span>回答が来たら自動で返信</a></li><li><a href="../017/"><span class="label-no">No.017</span>フォームを自動で作る</a></li><li><a href="../040/"><span class="label-no">No.040</span>回答を集計して通知</a></li></ul>
+      <p class="sp-pn"><a href="../046/" rel="prev"><span>前の標本</span>No.046 スマホで押せる打刻ボタン</a><a href="../048/" rel="next"><span>次の標本</span>No.048 全員が空いている会議の候補を探す</a></p>
+      <p><a class="btn" href="../../#zukan"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>56種の標本の一覧へ</a></p>
+    </nav>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <a class="logo" href="../../"><span class="logo-mark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>ラクガス図鑑</a>
+    <span>コード例は見本です。ご利用は自己責任でお願いします。</span>
+    <span class="privacy">サイトの改善のため、個人を特定しない形で、どのページが見られたかを記録しています。ブラウザの「トラッキング拒否」を有効にしている場合は記録しません。</span>
+  </div>
+</footer>
+</body>
+</html>

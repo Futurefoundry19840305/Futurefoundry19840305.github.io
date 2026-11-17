@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>申請をメールで承認してもらう【GASのコード例つき】｜ラクガス図鑑 No.045</title>
+<meta name="description" content="申請が入ると上長に「承認・却下」のリンク付きメールが届き、押すと結果がシートに残ります。備品購入・休暇・経費などの申請を、紙やチャットのやり取りなしで承認まで進めたいときに。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約20時間）を紹介します。">
+<link rel="canonical" href="https://futurefoundry19840305.github.io/rakugas-zukan/no/045/">
+<meta property="og:title" content="No.045 申請をメールで承認してもらう｜ラクガス図鑑">
+<meta property="og:description" content="申請が入ると上長に「承認・却下」のリンク付きメールが届き、押すと結果がシートに残ります。備品購入・休暇・経費などの申請を、紙やチャットのやり取りなしで承認まで進めたいときに。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約20時間）を紹介します。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://futurefoundry19840305.github.io/rakugas-zukan/no/045/">
+<meta property="og:site_name" content="ラクガス図鑑">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1a2747" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11191d" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2317784a'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preload" href="../../assets/fonts/dela-gothic-one-subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"申請をメールで承認してもらう","description":"申請が入ると上長に「承認・却下」のリンク付きメールが届き、押すと結果がシートに残ります。備品購入・休暇・経費などの申請を、紙やチャットのやり取りなしで承認まで進めたいときに。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約20時間）を紹介します。","inLanguage":"ja","url":"https://futurefoundry19840305.github.io/rakugas-zukan/no/045/","mainEntityOfPage":"https://futurefoundry19840305.github.io/rakugas-zukan/no/045/","image":"https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png","about":{"@type":"SoftwareApplication","name":"Google Apps Script","applicationCategory":"DeveloperApplication"},"proficiencyLevel":"Expert","isPartOf":{"@type":"WebSite","name":"ラクガス図鑑","url":"https://futurefoundry19840305.github.io/rakugas-zukan/"},"hasPart":{"@type":"SoftwareSourceCode","programmingLanguage":"Google Apps Script","text":"// 申請シートの行について、承認・却下のリンク付きメールを上長へ送る\nconst APP_URL = 'ウェブアプリのURL';\nfunction requestApproval(row) {\n  const sh = SpreadsheetApp.getActive().getSheetByName('申請');\n  const [date, name, item, amount] = sh.getRange(row, 1, 1, 4).getValues()[0];\n  const token = Utilities.getUuid();\n  sh.getRange(row, 6).setValue(token);            // F列：使い捨ての合言葉\n  const link = (a) => APP_URL + '?row=' + row + '&a=' + a + '&t=' + token;\n  GmailApp.sendEmail('boss@example.com', '【承認依頼】' + name + '：' + item,\n    item + '（' + amount + '円）\\n承認する：' + link('ok') + '\\n却下する：' + link('ng'));\n}\n// リンクを開くと確認画面を出す（開いただけでは確定しない）\nfunction doGet(e) {\n  const a = e.parameter.a === 'ok' ? 'ok' : 'ng';\n  const row = Number(e.parameter.row) || 0;\n  const t = String(e.parameter.t || '').replace(/[^\\w-]/g, '');\n  return HtmlService.createHtmlOutput('\u003cp>' + (a === 'ok' ? '承認' : '却下') + 'しますか？\u003c/p>' +\n    '\u003cbutton onclick=\"google.script.run.withSuccessHandler(function(m){document.body.textContent=m})' +\n    '.decide(' + row + ',\\'' + a + '\\',\\'' + t + '\\')\">確定する\u003c/button>');\n}\nfunction decide(row, a, t) {\n  const sh = SpreadsheetApp.getActive().getSheetByName('申請');\n  if (!t || sh.getRange(row, 6).getValue() !== t) return 'このリンクは使えません（処理済みか無効です）';\n  sh.getRange(row, 5).setValue(a === 'ok' ? '承認' : '却下');   // E列：結果\n  sh.getRange(row, 6).clearContent();                          // 一度使ったリンクは無効に\n  return '記録しました。';\n}"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ラクガス図鑑","item":"https://futurefoundry19840305.github.io/rakugas-zukan/"},{"@type":"ListItem","position":2,"name":"Webアプリ"},{"@type":"ListItem","position":3,"name":"No.045","item":"https://futurefoundry19840305.github.io/rakugas-zukan/no/045/"}]}]}</script>
+<script src="../../assets/config.js" defer></script>
+<script src="../../assets/page.js" defer></script>
+</head>
+<body class="sub ">
+<a class="skip" href="#main">本文へスキップ</a>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../"><span class="logo-mark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>ラクガス図鑑</a>
+    <nav class="nav" aria-label="サイト内の移動">
+      <a class="nav-link" href="../../#zukan">標本の一覧</a>
+      <a class="nav-link" href="../../#price">料金</a>
+      <a class="nav-link" href="../../#guide">はじめ方</a>
+      <a class="btn primary small" href="../../#request" data-req-link>作成を依頼する</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="現在の場所"><ol><li><a href="../../">ラクガス図鑑</a></li><li><a href="../../#zukan">Webアプリ</a></li><li aria-current="page">No.045</li></ol></nav>
+
+    <article class="sheetpage" style="--hc:var(--h-web)">
+      <header class="sp-head">
+        <p class="label-top"><span class="label-no">No.045<span class="adv-tag">応用</span></span><span class="label-hab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18M6 6h.01M8.5 6h.01"/></svg>Webアプリ</span></p>
+        <h1>申請をメールで承認してもらう</h1>
+        <p class="sp-lead">申請が入ると上長に「承認・却下」のリンク付きメールが届き、押すと結果がシートに残ります。</p>
+        <dl class="sp-facts">
+          <div><dt>年間の時間削減</dt><dd><b>約20時間</b></dd></div>
+          <div><dt>難しさ</dt><dd><span class="lv" role="img" aria-label="難しさ：ちょい難"><i class="on"></i><i class="on"></i><i class="on"></i></span> ちょい難</dd></div>
+          <div><dt>動くきっかけ</dt><dd>アクセス時</dd></div>
+        </dl>
+      </header>
+      <div class="sp-body">
+        <div class="flow" role="img" aria-label="流れ：アクセス時、GAS、シート・メール・Webページ"><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18M6 6h.01M8.5 6h.01"/></svg>アクセス時</span><span class="arr" aria-hidden="true">▸</span><span class="node g"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>GAS</span><span class="arr" aria-hidden="true">▸</span><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/></svg>シート</span><span class="arr" aria-hidden="true">▸</span><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>メール</span><span class="arr" aria-hidden="true">▸</span><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18M6 6h.01M8.5 6h.01"/></svg>Webページ</span></div>
+        <section><h2>こんな時に便利</h2><p>備品購入・休暇・経費などの申請を、紙やチャットのやり取りなしで承認まで進めたいときに。</p></section>
+        <section><h2>応用のポイント</h2><ul class="tips"><li>リンクを開いただけで承認されないよう、確認画面のボタンを押して確定する作りにしています（メールのセキュリティ機能がリンクを先読みすることがあるため）。</li><li>行ごとに使い捨ての合言葉（トークン）を発行し、一度使ったリンクは無効にします。</li><li>ウェブアプリは「次のユーザーとして実行：自分」でデプロイし、APP_URL にそのURLを入れます。</li></ul></section>
+        <section><h2>時間削減のめやす</h2>
+          <div class="saving">
+            <div class="saving-row"><span class="saving-k">いまの手作業</span><span>申請内容を転送し、返事を待って台帳に書き写す</span></div>
+            <div class="saving-row"><span class="saving-k">1回あたり</span><span>約10分 × 月10件</span></div>
+            <div class="saving-row"><span class="saving-k">GASなら</span><span>ほぼ自動（数秒〜1分）</span></div>
+            <div class="saving-total"><span>年間</span><b>約20時間</b><span>の削減</span></div>
+            <p class="saving-note">1回の手作業時間と回数から計算した、めやすです。</p>
+          </div>
+        </section>
+        <section><h2>コード例</h2>
+          <div class="code-wrap"><pre translate="no" tabindex="0" aria-label="コード例"><code>// 申請シートの行について、承認・却下のリンク付きメールを上長へ送る
+const APP_URL = &#39;ウェブアプリのURL&#39;;
+function requestApproval(row) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(&#39;申請&#39;);
+  const [date, name, item, amount] = sh.getRange(row, 1, 1, 4).getValues()[0];
+  const token = Utilities.getUuid();
+  sh.getRange(row, 6).setValue(token);            // F列：使い捨ての合言葉
+  const link = (a) =&gt; APP_URL + &#39;?row=&#39; + row + &#39;&amp;a=&#39; + a + &#39;&amp;t=&#39; + token;
+  GmailApp.sendEmail(&#39;boss@example.com&#39;, &#39;【承認依頼】&#39; + name + &#39;：&#39; + item,
+    item + &#39;（&#39; + amount + &#39;円）\n承認する：&#39; + link(&#39;ok&#39;) + &#39;\n却下する：&#39; + link(&#39;ng&#39;));
+}
+// リンクを開くと確認画面を出す（開いただけでは確定しない）
+function doGet(e) {
+  const a = e.parameter.a === &#39;ok&#39; ? &#39;ok&#39; : &#39;ng&#39;;
+  const row = Number(e.parameter.row) || 0;
+  const t = String(e.parameter.t || &#39;&#39;).replace(/[^\w-]/g, &#39;&#39;);
+  return HtmlService.createHtmlOutput(&#39;&lt;p&gt;&#39; + (a === &#39;ok&#39; ? &#39;承認&#39; : &#39;却下&#39;) + &#39;しますか？&lt;/p&gt;&#39; +
+    &#39;&lt;button onclick=&quot;google.script.run.withSuccessHandler(function(m){document.body.textContent=m})&#39; +
+    &#39;.decide(&#39; + row + &#39;,\&#39;&#39; + a + &#39;\&#39;,\&#39;&#39; + t + &#39;\&#39;)&quot;&gt;確定する&lt;/button&gt;&#39;);
+}
+function decide(row, a, t) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(&#39;申請&#39;);
+  if (!t || sh.getRange(row, 6).getValue() !== t) return &#39;このリンクは使えません（処理済みか無効です）&#39;;
+  sh.getRange(row, 5).setValue(a === &#39;ok&#39; ? &#39;承認&#39; : &#39;却下&#39;);   // E列：結果
+  sh.getRange(row, 6).clearContent();                          // 一度使ったリンクは無効に
+  return &#39;記録しました。&#39;;
+}</code></pre><button class="copy" type="button" data-copy-code hidden>コピー</button></div>
+          <p class="cnote">見本のコードです。メールアドレスやURL・トークンを自分のものに書き換え、テスト用のデータで試してから使ってください。</p>
+        </section>
+        <section><h2>試し方</h2>
+          <ol class="sp-steps"><li>Googleスプレッドシートを開く</li><li>メニューの「拡張機能」→「Apps Script」を選ぶ</li><li>コードを貼り付けて保存する（Ctrl＋S）</li><li>「実行」を押す（初回だけ許可の確認が出ます）</li><li>自動で動かすなら、左の時計マーク「トリガー」で時間を設定する</li></ol>
+          <p class="muted">うまく動かないときは、<a href="../../#cautions">使う前に知っておきたいこと</a>を確認してください。</p>
+        </section>
+        <aside class="sp-cta">
+          <p><b>自分の業務に合わせて作ってほしい場合は</b>、この標本をもとに作成を依頼できます。料金は内容を伺ってからお見積りします。</p>
+          <a class="btn primary" href="../../?ref=No.045%20%E7%94%B3%E8%AB%8B%E3%82%92%E3%83%A1%E3%83%BC%E3%83%AB%E3%81%A7%E6%89%BF%E8%AA%8D%E3%81%97%E3%81%A6%E3%82%82%E3%82%89%E3%81%86#request" data-req-link data-ref="No.045 申請をメールで承認してもらう"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.5l7 3 3 7.5z"/><path d="m10 13.5 4.5-4.5"/></svg>これに近いものを依頼する</a>
+        </aside>
+      </div>
+    </article>
+    <nav class="sp-more" aria-label="ほかの標本">
+      <h2>Webアプリのほかの標本</h2><ul class="sp-near"><li><a href="../046/"><span class="label-no">No.046</span>スマホで押せる打刻ボタン</a></li><li><a href="../021/"><span class="label-no">No.021</span>簡単なWebページを公開</a></li><li><a href="../022/"><span class="label-no">No.022</span>他のサービスからデータを受け取る</a></li></ul>
+      <p class="sp-pn"><a href="../044/" rel="prev"><span>前の標本</span>No.044 エラー時に自分へ知らせる</a><a href="../046/" rel="next"><span>次の標本</span>No.046 スマホで押せる打刻ボタン</a></p>
+      <p><a class="btn" href="../../#zukan"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>56種の標本の一覧へ</a></p>
+    </nav>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <a class="logo" href="../../"><span class="logo-mark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>ラクガス図鑑</a>
+    <span>コード例は見本です。ご利用は自己責任でお願いします。</span>
+    <span class="privacy">サイトの改善のため、個人を特定しない形で、どのページが見られたかを記録しています。ブラウザの「トラッキング拒否」を有効にしている場合は記録しません。</span>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,71 @@
+# ラクガス図鑑
+
+> Google Apps Script（GAS）でできる業務の自動化を、56種の「標本」として紹介する日本語のサイトです。標本ごとに、使う場面・流れ図・年間の時間削減のめやす・コード例を載せています。GASの作成依頼も受け付けています（料金は内容を伺ってお見積り）。
+
+コード例は見本です。シート名やIDなどを自分の環境に合わせて書き換え、テスト用のデータで試してから使う前提です。
+
+## 図鑑
+- [ラクガス図鑑のトップ](https://futurefoundry19840305.github.io/rakugas-zukan/): 標本の一覧、しくみの説明、作成の依頼、自分で試す手順
+
+## 業界別の付録
+- [不動産業務のGAS化判定](https://futurefoundry19840305.github.io/rakugas-zukan/furoku/fudosan/): 不動産会社の62業務を、GASで自動化できるかで判定
+- [旅館・ホテル業務のGAS化判定](https://futurefoundry19840305.github.io/rakugas-zukan/furoku/ryokan-hotel/): 宿泊施設の業務の判定
+- [飲食店業務のGAS化判定](https://futurefoundry19840305.github.io/rakugas-zukan/furoku/inshoku/): 飲食店の49業務の判定
+
+## 標本
+- [No.001 表のデータを自動で集計する](https://futurefoundry19840305.github.io/rakugas-zukan/no/001/): スプレッドシート。毎日の売上や経費を、ボタン一つで合計・分類します。
+- [No.002 オリジナルのメニューを追加](https://futurefoundry19840305.github.io/rakugas-zukan/no/002/): スプレッドシート。シートの上部に自分専用のボタンメニューを作れます。
+- [No.003 自分だけの関数を作る](https://futurefoundry19840305.github.io/rakugas-zukan/no/003/): スプレッドシート。=税込(A2) のように、オリジナル関数をセルで使えます。
+- [No.004 複数シートを1つにまとめる](https://futurefoundry19840305.github.io/rakugas-zukan/no/004/): スプレッドシート。部署別・月別のシートを1枚に自動で集めます。
+- [No.005 メールを一斉に自動送信](https://futurefoundry19840305.github.io/rakugas-zukan/no/005/): Gmail。シートの名前とアドレスを使って、一人ずつ宛名入りメールを送ります。
+- [No.006 届いたメールをシートに記録](https://futurefoundry19840305.github.io/rakugas-zukan/no/006/): Gmail。特定の件名や送り主のメールを、表に自動で書き出します。
+- [No.007 添付ファイルをドライブに保存](https://futurefoundry19840305.github.io/rakugas-zukan/no/007/): Gmail。メールのPDFや画像を、自動でフォルダに保存します。
+- [No.008 メールに自動でラベル付け](https://futurefoundry19840305.github.io/rakugas-zukan/no/008/): Gmail。条件に合うメールを仕分けて整理します。
+- [No.009 シートから予定を一括登録](https://futurefoundry19840305.github.io/rakugas-zukan/no/009/): カレンダー。表に書いた予定を、まとめてGoogleカレンダーに入れます。
+- [No.010 今日の予定を朝に通知](https://futurefoundry19840305.github.io/rakugas-zukan/no/010/): カレンダー。毎朝、その日の予定一覧をメールで届けます。
+- [No.011 ファイル一覧を表にする](https://futurefoundry19840305.github.io/rakugas-zukan/no/011/): ドライブ。フォルダの中身（名前・URL・更新日）を一覧にします。
+- [No.012 フォルダを自動で作成・整理](https://futurefoundry19840305.github.io/rakugas-zukan/no/012/): ドライブ。月ごと・顧客ごとのフォルダを一気に作ります。
+- [No.013 定期的にバックアップ](https://futurefoundry19840305.github.io/rakugas-zukan/no/013/): ドライブ。大事なシートのコピーを毎日自動で残します。
+- [No.014 ひな形から書類を自動作成](https://futurefoundry19840305.github.io/rakugas-zukan/no/014/): ドキュメント。請求書や契約書のひな形に、名前や金額を差し込みます。
+- [No.015 PDFに変換して保存・送信](https://futurefoundry19840305.github.io/rakugas-zukan/no/015/): ドキュメント。作った書類をPDFにして、保存やメール添付をします。
+- [No.016 回答が来たら自動で返信](https://futurefoundry19840305.github.io/rakugas-zukan/no/016/): フォーム。Googleフォームに回答した人に、お礼メールを送ります。
+- [No.017 フォームを自動で作る](https://futurefoundry19840305.github.io/rakugas-zukan/no/017/): フォーム。質問リストから、アンケートフォームを一瞬で作成します。
+- [No.018 Slack / Chatに通知](https://futurefoundry19840305.github.io/rakugas-zukan/no/018/): 外部連携。締切やエラーを、チャットに自動で知らせます。
+- [No.019 天気や為替などの情報を取得](https://futurefoundry19840305.github.io/rakugas-zukan/no/019/): 外部連携。インターネット上のAPIから情報を取り込みます。
+- [No.020 翻訳を自動で行う](https://futurefoundry19840305.github.io/rakugas-zukan/no/020/): 外部連携。Googleの翻訳機能で、文章を他の言語に変換します。
+- [No.021 簡単なWebページを公開](https://futurefoundry19840305.github.io/rakugas-zukan/no/021/): Webアプリ。GASだけで入力フォームや社内ツールのページが作れます。
+- [No.022 他のサービスからデータを受け取る](https://futurefoundry19840305.github.io/rakugas-zukan/no/022/): Webアプリ。外部から送られたデータを受け取り、シートに保存します。
+- [No.023 毎日・毎週決まった時間に実行](https://futurefoundry19840305.github.io/rakugas-zukan/no/023/): 自動実行。時間を決めておけば、パソコンを閉じていても動きます。
+- [No.024 シートが編集されたら動く](https://futurefoundry19840305.github.io/rakugas-zukan/no/024/): 自動実行。セルが変更された瞬間に、記録や色付けをします。
+- [No.025 重複データを自動で削除](https://futurefoundry19840305.github.io/rakugas-zukan/no/025/): スプレッドシート。同じ行が何度も入ってしまった表を、一発できれいにします。
+- [No.026 条件に合う行に色を付ける](https://futurefoundry19840305.github.io/rakugas-zukan/no/026/): スプレッドシート。期限切れや金額が大きい行などを目立たせます。
+- [No.027 グラフを自動で作成](https://futurefoundry19840305.github.io/rakugas-zukan/no/027/): スプレッドシート。表のデータから棒グラフや折れ線グラフを作ります。
+- [No.028 シートをPDFにして送る](https://futurefoundry19840305.github.io/rakugas-zukan/no/028/): スプレッドシート。表をそのままPDFにして、メールで送れます。
+- [No.029 入力ミスをチェック](https://futurefoundry19840305.github.io/rakugas-zukan/no/029/): スプレッドシート。空欄や形式の間違ったメールアドレスを見つけて知らせます。
+- [No.030 下書きをまとめて作成](https://futurefoundry19840305.github.io/rakugas-zukan/no/030/): Gmail。すぐ送らずに下書きに入れるので、確認してから送れます。
+- [No.031 古いメールを自動で整理](https://futurefoundry19840305.github.io/rakugas-zukan/no/031/): Gmail。一定期間より古い宣伝メールなどをゴミ箱へ移します。
+- [No.032 返信していないメールを通知](https://futurefoundry19840305.github.io/rakugas-zukan/no/032/): Gmail。数日返事をしていない大事なメールを思い出させます。
+- [No.033 予定をシートに書き出す](https://futurefoundry19840305.github.io/rakugas-zukan/no/033/): カレンダー。1か月分の予定を表にして、作業時間の集計などに使えます。
+- [No.034 誕生日や記念日をリマインド](https://futurefoundry19840305.github.io/rakugas-zukan/no/034/): カレンダー。名簿の日付を見て、当日にお知らせします。
+- [No.035 ファイル名を一括で変更](https://futurefoundry19840305.github.io/rakugas-zukan/no/035/): ドライブ。たくさんのファイル名に日付や番号を付け直します。
+- [No.036 共有設定をまとめて変更](https://futurefoundry19840305.github.io/rakugas-zukan/no/036/): ドライブ。フォルダ内のファイルを特定の人と一括共有します。
+- [No.037 議事録のひな形を自動作成](https://futurefoundry19840305.github.io/rakugas-zukan/no/037/): ドキュメント。日付と参加者入りの議事録を、会議の前に用意します。
+- [No.038 シートの内容でスライドを作る](https://futurefoundry19840305.github.io/rakugas-zukan/no/038/): スライド。表の1行を1枚のスライドにして、資料を自動で作ります。
+- [No.039 スライドの文字を一括置換](https://futurefoundry19840305.github.io/rakugas-zukan/no/039/): スライド。社名や日付など、全ページの文字をまとめて書き換えます。
+- [No.040 回答を集計して通知](https://futurefoundry19840305.github.io/rakugas-zukan/no/040/): フォーム。集まった回答の数や結果を、毎日まとめて知らせます。
+- [No.041 LINEに通知を送る](https://futurefoundry19840305.github.io/rakugas-zukan/no/041/): 外部連携。LINE公式アカウントのMessaging APIで、スマホに通知します。
+- [No.042 Webページの情報を取り込む](https://futurefoundry19840305.github.io/rakugas-zukan/no/042/): 外部連携。公開されているページの内容を読み取り、記録します。
+- [No.043 毎月1日に実行](https://futurefoundry19840305.github.io/rakugas-zukan/no/043/): 自動実行。月初の請求処理や集計を、忘れずに自動で行います。
+- [No.044 エラー時に自分へ知らせる](https://futurefoundry19840305.github.io/rakugas-zukan/no/044/): 自動実行。自動処理が失敗したとき、すぐ気づけるようにします。
+- [No.045 申請をメールで承認してもらう](https://futurefoundry19840305.github.io/rakugas-zukan/no/045/): Webアプリ。申請が入ると上長に「承認・却下」のリンク付きメールが届き、押すと結果がシートに残ります。
+- [No.046 スマホで押せる打刻ボタン](https://futurefoundry19840305.github.io/rakugas-zukan/no/046/): Webアプリ。「出勤」「退勤」ボタンだけのページを作り、押した時刻と人をシートに記録します。
+- [No.047 予約を受け付けてカレンダーに入れる](https://futurefoundry19840305.github.io/rakugas-zukan/no/047/): フォーム。フォームの希望日時が空いていればカレンダーに登録し、受付・お断りのメールを自動で返します。
+- [No.048 全員が空いている会議の候補を探す](https://futurefoundry19840305.github.io/rakugas-zukan/no/048/): カレンダー。参加者のカレンダーの空き状況を調べて、全員が空いている時間の候補を一覧にします。
+- [No.049 月次レポートを自動で作って配る](https://futurefoundry19840305.github.io/rakugas-zukan/no/049/): スライド。シートの数字とグラフをスライドのひな形に差し込み、PDFにして関係者へメールします。
+- [No.050 在庫が減ったら発注メールを下書き](https://futurefoundry19840305.github.io/rakugas-zukan/no/050/): スプレッドシート。在庫が発注点を下回った品目を仕入先ごとにまとめ、発注メールの下書きを作ります。
+- [No.051 契約の更新日が近づいたら知らせる](https://futurefoundry19840305.github.io/rakugas-zukan/no/051/): 自動実行。契約台帳を毎朝見て、更新日の30日前と7日前に担当者へメールで知らせます。
+- [No.052 公開しすぎのファイルを見つける](https://futurefoundry19840305.github.io/rakugas-zukan/no/052/): ドライブ。「リンクを知っている全員」などに公開されている自分のファイルを探し、一覧にします。
+- [No.053 PDFや画像の文字を読み取る](https://futurefoundry19840305.github.io/rakugas-zukan/no/053/): ドライブ。届いた請求書などのPDFを文字に変換（OCR）し、合計金額などをシートに書き出します。
+- [No.054 問い合わせをAIで分類・要約](https://futurefoundry19840305.github.io/rakugas-zukan/no/054/): Gmail。問い合わせメールをAI（Gemini API）に読ませて種類分けと1行要約をし、ラベルとシートに残します。
+- [No.055 外部サービスと毎晩データを同期](https://futurefoundry19840305.github.io/rakugas-zukan/no/055/): 外部連携。ネットショップや業務システムのAPIから新しいデータを取り込み、シートを毎晩最新にします。
+- [No.056 大量のデータを分けて処理する](https://futurefoundry19840305.github.io/rakugas-zukan/no/056/): 自動実行。1回6分の実行時間の上限を超えないよう、5分で区切り、1分後に続きから自動で再開します。

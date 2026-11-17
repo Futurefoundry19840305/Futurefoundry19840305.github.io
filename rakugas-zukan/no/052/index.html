@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>公開しすぎのファイルを見つける【GASのコード例つき】｜ラクガス図鑑 No.052</title>
+<meta name="description" content="「リンクを知っている全員」などに公開されている自分のファイルを探し、一覧にします。情報漏えいの点検に。退職者の引き継ぎや、取引先との共有を見直すときにも。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約4時間）を紹介します。">
+<link rel="canonical" href="https://futurefoundry19840305.github.io/rakugas-zukan/no/052/">
+<meta property="og:title" content="No.052 公開しすぎのファイルを見つける｜ラクガス図鑑">
+<meta property="og:description" content="「リンクを知っている全員」などに公開されている自分のファイルを探し、一覧にします。情報漏えいの点検に。退職者の引き継ぎや、取引先との共有を見直すときにも。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約4時間）を紹介します。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://futurefoundry19840305.github.io/rakugas-zukan/no/052/">
+<meta property="og:site_name" content="ラクガス図鑑">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1a2747" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11191d" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2317784a'/%3E%3Ccircle cx='16' cy='16' r='4.5' fill='none' stroke='white' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preload" href="../../assets/fonts/dela-gothic-one-subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"公開しすぎのファイルを見つける","description":"「リンクを知っている全員」などに公開されている自分のファイルを探し、一覧にします。情報漏えいの点検に。退職者の引き継ぎや、取引先との共有を見直すときにも。 Google Apps Script（GAS）のコード例と流れ図、年間の時間削減のめやす（約4時間）を紹介します。","inLanguage":"ja","url":"https://futurefoundry19840305.github.io/rakugas-zukan/no/052/","mainEntityOfPage":"https://futurefoundry19840305.github.io/rakugas-zukan/no/052/","image":"https://futurefoundry19840305.github.io/rakugas-zukan/assets/ogp.png","about":{"@type":"SoftwareApplication","name":"Google Apps Script","applicationCategory":"DeveloperApplication"},"proficiencyLevel":"Expert","isPartOf":{"@type":"WebSite","name":"ラクガス図鑑","url":"https://futurefoundry19840305.github.io/rakugas-zukan/"},"hasPart":{"@type":"SoftwareSourceCode","programmingLanguage":"Google Apps Script","text":"// 自分がオーナーのファイルのうち、外部に公開されているものを「共有チェック」シートに書き出す\nfunction auditSharing() {\n  const out = [['ファイル名', '共有範囲', '最終更新', 'URL']];\n  const open = [DriveApp.Access.ANYONE, DriveApp.Access.ANYONE_WITH_LINK];\n  const files = DriveApp.searchFiles(\"'me' in owners and trashed = false\");\n  while (files.hasNext()) {\n    const f = files.next();\n    const a = f.getSharingAccess();\n    if (open.indexOf(a) >= 0) out.push([f.getName(), String(a), f.getLastUpdated(), f.getUrl()]);\n  }\n  const ss = SpreadsheetApp.getActive();\n  const sh = ss.getSheetByName('共有チェック') || ss.insertSheet('共有チェック');\n  sh.clear().getRange(1, 1, out.length, out[0].length).setValues(out);\n}"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ラクガス図鑑","item":"https://futurefoundry19840305.github.io/rakugas-zukan/"},{"@type":"ListItem","position":2,"name":"ドライブ"},{"@type":"ListItem","position":3,"name":"No.052","item":"https://futurefoundry19840305.github.io/rakugas-zukan/no/052/"}]}]}</script>
+<script src="../../assets/config.js" defer></script>
+<script src="../../assets/page.js" defer></script>
+</head>
+<body class="sub ">
+<a class="skip" href="#main">本文へスキップ</a>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../../"><span class="logo-mark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>ラクガス図鑑</a>
+    <nav class="nav" aria-label="サイト内の移動">
+      <a class="nav-link" href="../../#zukan">標本の一覧</a>
+      <a class="nav-link" href="../../#price">料金</a>
+      <a class="nav-link" href="../../#guide">はじめ方</a>
+      <a class="btn primary small" href="../../#request" data-req-link>作成を依頼する</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="現在の場所"><ol><li><a href="../../">ラクガス図鑑</a></li><li><a href="../../#zukan">ドライブ</a></li><li aria-current="page">No.052</li></ol></nav>
+
+    <article class="sheetpage" style="--hc:var(--h-drive)">
+      <header class="sp-head">
+        <p class="label-top"><span class="label-no">No.052<span class="adv-tag">応用</span></span><span class="label-hab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>ドライブ</span></p>
+        <h1>公開しすぎのファイルを見つける</h1>
+        <p class="sp-lead">「リンクを知っている全員」などに公開されている自分のファイルを探し、一覧にします。</p>
+        <dl class="sp-facts">
+          <div><dt>年間の時間削減</dt><dd><b>約4時間</b></dd></div>
+          <div><dt>難しさ</dt><dd><span class="lv" role="img" aria-label="難しさ：ちょい難"><i class="on"></i><i class="on"></i><i class="on"></i></span> ちょい難</dd></div>
+          <div><dt>動くきっかけ</dt><dd>実行ボタン</dd></div>
+        </dl>
+      </header>
+      <div class="sp-body">
+        <div class="flow" role="img" aria-label="流れ：実行ボタン、GAS、ドライブ・シート"><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="6"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg>実行ボタン</span><span class="arr" aria-hidden="true">▸</span><span class="node g"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>GAS</span><span class="arr" aria-hidden="true">▸</span><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>ドライブ</span><span class="arr" aria-hidden="true">▸</span><span class="node"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16M15 4v16"/></svg>シート</span></div>
+        <section><h2>こんな時に便利</h2><p>情報漏えいの点検に。退職者の引き継ぎや、取引先との共有を見直すときにも。</p></section>
+        <section><h2>応用のポイント</h2><ul class="tips"><li>ファイルが多いと1回の実行時間（6分）を超えることがあります。そのときは No.056 の分割処理と組み合わせます。</li><li>見つけたファイルの共有をまとめて直すなら No.036 と組み合わせます。まずは一覧で確認してから直すのが安全です。</li><li>組織のファイル全体を点検するのは、Google Workspace の管理者向けの機能のほうが向いています。</li></ul></section>
+        <section><h2>時間削減のめやす</h2>
+          <div class="saving">
+            <div class="saving-row"><span class="saving-k">いまの手作業</span><span>ドライブのファイルを1つずつ開いて共有設定を確かめる</span></div>
+            <div class="saving-row"><span class="saving-k">1回あたり</span><span>約60分 × 四半期ごと</span></div>
+            <div class="saving-row"><span class="saving-k">GASなら</span><span>ほぼ自動（数秒〜1分）</span></div>
+            <div class="saving-total"><span>年間</span><b>約4時間</b><span>の削減</span></div>
+            <p class="saving-note">1回の手作業時間と回数から計算した、めやすです。</p>
+          </div>
+        </section>
+        <section><h2>コード例</h2>
+          <div class="code-wrap"><pre translate="no" tabindex="0" aria-label="コード例"><code>// 自分がオーナーのファイルのうち、外部に公開されているものを「共有チェック」シートに書き出す
+function auditSharing() {
+  const out = [[&#39;ファイル名&#39;, &#39;共有範囲&#39;, &#39;最終更新&#39;, &#39;URL&#39;]];
+  const open = [DriveApp.Access.ANYONE, DriveApp.Access.ANYONE_WITH_LINK];
+  const files = DriveApp.searchFiles(&quot;&#39;me&#39; in owners and trashed = false&quot;);
+  while (files.hasNext()) {
+    const f = files.next();
+    const a = f.getSharingAccess();
+    if (open.indexOf(a) &gt;= 0) out.push([f.getName(), String(a), f.getLastUpdated(), f.getUrl()]);
+  }
+  const ss = SpreadsheetApp.getActive();
+  const sh = ss.getSheetByName(&#39;共有チェック&#39;) || ss.insertSheet(&#39;共有チェック&#39;);
+  sh.clear().getRange(1, 1, out.length, out[0].length).setValues(out);
+}</code></pre><button class="copy" type="button" data-copy-code hidden>コピー</button></div>
+          <p class="cnote">見本のコードです。自分の環境に合わせて書き換え、テスト用のデータで試してから使ってください。</p>
+        </section>
+        <section><h2>試し方</h2>
+          <ol class="sp-steps"><li>Googleスプレッドシートを開く</li><li>メニューの「拡張機能」→「Apps Script」を選ぶ</li><li>コードを貼り付けて保存する（Ctrl＋S）</li><li>「実行」を押す（初回だけ許可の確認が出ます）</li><li>自動で動かすなら、左の時計マーク「トリガー」で時間を設定する</li></ol>
+          <p class="muted">うまく動かないときは、<a href="../../#cautions">使う前に知っておきたいこと</a>を確認してください。</p>
+        </section>
+        <aside class="sp-cta">
+          <p><b>自分の業務に合わせて作ってほしい場合は</b>、この標本をもとに作成を依頼できます。料金は内容を伺ってからお見積りします。</p>
+          <a class="btn primary" href="../../?ref=No.052%20%E5%85%AC%E9%96%8B%E3%81%97%E3%81%99%E3%81%8E%E3%81%AE%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92%E8%A6%8B%E3%81%A4%E3%81%91%E3%82%8B#request" data-req-link data-ref="No.052 公開しすぎのファイルを見つける"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 3 3 10.5l7 3 3 7.5z"/><path d="m10 13.5 4.5-4.5"/></svg>これに近いものを依頼する</a>
+        </aside>
+      </div>
+    </article>
+    <nav class="sp-more" aria-label="ほかの標本">
+      <h2>ドライブのほかの標本</h2><ul class="sp-near"><li><a href="../053/"><span class="label-no">No.053</span>PDFや画像の文字を読み取る</a></li><li><a href="../011/"><span class="label-no">No.011</span>ファイル一覧を表にする</a></li><li><a href="../012/"><span class="label-no">No.012</span>フォルダを自動で作成・整理</a></li><li><a href="../013/"><span class="label-no">No.013</span>定期的にバックアップ</a></li></ul>
+      <p class="sp-pn"><a href="../051/" rel="prev"><span>前の標本</span>No.051 契約の更新日が近づいたら知らせる</a><a href="../053/" rel="next"><span>次の標本</span>No.053 PDFや画像の文字を読み取る</a></p>
+      <p><a class="btn" href="../../#zukan"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>56種の標本の一覧へ</a></p>
+    </nav>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <a class="logo" href="../../"><span class="logo-mark"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span>ラクガス図鑑</a>
+    <span>コード例は見本です。ご利用は自己責任でお願いします。</span>
+    <span class="privacy">サイトの改善のため、個人を特定しない形で、どのページが見られたかを記録しています。ブラウザの「トラッキング拒否」を有効にしている場合は記録しません。</span>
+  </div>
+</footer>
+</body>
+</html>
