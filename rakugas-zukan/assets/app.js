@@ -339,7 +339,7 @@
   });
 
   /* 付録：業界別（右端のタブから引き出しのように開く） */
-  const FX = { 'furoku': '付録：不動産業界', 'furoku-hotel': '付録：旅館・ホテル', 'furoku-food': '付録：飲食店' };
+  const FX = { 'furoku': '付録：不動産業界', 'furoku-hotel': '付録：旅館・ホテル', 'furoku-food': '付録：飲食店', 'furoku-fashion': '付録：ファッション' };
   const drawers = Object.keys(FX).map((id) => $(id)).filter(Boolean);
   /* 横にスクロールする表：キーボードでも動かせるようにする */
   function tblA11y(root) {

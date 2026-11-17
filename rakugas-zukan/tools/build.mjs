@@ -199,7 +199,7 @@ for (const x of SPEC) {
 
 /* ---------- 付録（業界別）のページ ---------- */
 export const FUROKU = [
-  ['fudosan', 'furoku', '不動産業界'], ['ryokan-hotel', 'furoku-hotel', '旅館・ホテル業界'], ['inshoku', 'furoku-food', '飲食店'],
+  ['fudosan', 'furoku', '不動産業界'], ['ryokan-hotel', 'furoku-hotel', '旅館・ホテル業界'], ['inshoku', 'furoku-food', '飲食店'], ['fashion', 'furoku-fashion', 'ファッション業界'],
 ];
 for (const [slug, , label] of FUROKU) {
   const src = fs.readFileSync(path.join(ROOT, `tools/fx/${slug}.html`), 'utf8');

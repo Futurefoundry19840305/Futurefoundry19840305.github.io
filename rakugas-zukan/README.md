@@ -26,7 +26,7 @@ GAS ウェブアプリ（gas/コード.gs）
 | `assets/data.js` | 56種の標本（No.045〜056は応用。`adv: true` と「応用のポイント」`tips` つき）と観察窓の場面データ |
 | `assets/config.js` | **GASのURLを書く場所** |
 | `no/001/` 〜 `no/056/` | 標本ごとのページ（検索から直接来られる入口）。**自動で作るので手で直さない** |
-| `furoku/fudosan/`・`furoku/ryokan-hotel/`・`furoku/inshoku/` | 業界別の付録のページ。トップ画面右端のタブを押すと、このページの本文を引き出しに読み込んで表示する。**自動で作るので手で直さない** |
+| `furoku/fudosan/`・`furoku/ryokan-hotel/`・`furoku/inshoku/`・`furoku/fashion/` | 業界別の付録のページ。トップ画面右端のタブを押すと、このページの本文を引き出しに読み込んで表示する。**自動で作るので手で直さない** |
 | `tools/fx/*.html` | 付録の本文（**付録を直すときはここを直す**） |
 | `tools/build.mjs` | 上の個別ページ・トップの標本一覧・`/sitemap.xml` を作るスクリプト |
 | `assets/page.js` | 個別ページの動き（コードのコピー・アクセス記録） |

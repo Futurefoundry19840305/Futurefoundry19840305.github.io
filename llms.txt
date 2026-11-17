@@ -11,6 +11,7 @@
 - [不動産業務のGAS化判定](https://futurefoundry19840305.github.io/rakugas-zukan/furoku/fudosan/): 不動産会社の62業務を、GASで自動化できるかで判定
 - [旅館・ホテル業務のGAS化判定](https://futurefoundry19840305.github.io/rakugas-zukan/furoku/ryokan-hotel/): 宿泊施設の業務の判定
 - [飲食店業務のGAS化判定](https://futurefoundry19840305.github.io/rakugas-zukan/furoku/inshoku/): 飲食店の49業務の判定
+- [ファッション業務のGAS化判定](https://futurefoundry19840305.github.io/rakugas-zukan/furoku/fashion/): アパレルブランド・セレクトショップの58業務（企画・生産・在庫・EC・店舗・卸・会員）の判定
 
 ## 標本
 - [No.001 表のデータを自動で集計する](https://futurefoundry19840305.github.io/rakugas-zukan/no/001/): スプレッドシート。毎日の売上や経費を、ボタン一つで合計・分類します。
