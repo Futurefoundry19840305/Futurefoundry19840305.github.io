@@ -266,6 +266,7 @@ code{font-size:12px;background:var(--sheet-2);padding:1px 5px;border-radius:3px}
         <ol class="bars warn" id="noHit"></ol>
       </section>
       <section class="panel s4"><h3>よく開かれた標本</h3><ol class="bars" id="specimens"></ol></section>
+      <section class="panel s4"><h3>お気に入りにされた標本</h3><p class="hint">★を付けたままの訪問者の数です。</p><ol class="bars" id="favs"></ol></section>
       <section class="panel s4"><h3>よく検索された言葉</h3><ol class="bars" id="searches"></ol></section>
       <section class="panel s4"><h3>どこから来たか</h3><p class="hint">リンクに <code>?utm_source=note</code> を付けると分けて数えられます。</p><ol class="bars" id="refs"></ol></section>
       <section class="panel s4"><h3>依頼ボタンが押された場所</h3><ol class="bars" id="reqFrom"></ol></section>
@@ -483,7 +484,7 @@ function render() {
   lines('accessChart', B);
   const fn = A.funnel, base = fn[0][1] || 1;
   $('funnel').innerHTML = fn.map((s, i) => `${i ? `<div class="drop">前の段階から <b>${pct(s[1], fn[i - 1][1])}%</b> が進みました</div>` : ''}<div class="step"><span>${esc(s[0])}</span><span class="track"><span class="fill" style="width:${Math.max(1, (s[1] / base) * 100)}%"></span></span><span class="n">${num(s[1])}</span></div>`).join('');
-  bars('specimens', A.specimens); bars('noHit', A.noHit, { empty: '見つからなかった検索はありません' }); bars('searches', A.searches);
+  bars('specimens', A.specimens); bars('favs', A.favs || [], { empty: 'まだお気に入りはありません' }); bars('noHit', A.noHit, { empty: '見つからなかった検索はありません' }); bars('searches', A.searches);
   bars('refs', A.refs); bars('reqFrom', A.reqFrom); bars('scenes', A.scenes); bars('devices', A.devices);
   bars('scroll', A.scroll.map((r) => [r[0] + ' まで', r[1]]), { fmt: (n) => pct(n, A.scrollBase) + '%' });
   bars('filters', A.filters);

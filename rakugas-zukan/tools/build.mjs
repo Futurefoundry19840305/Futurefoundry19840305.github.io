@@ -27,6 +27,7 @@ const HAB = {
 };
 const hab = (s) => HAB[s] || ['--ink', 'gear'];
 const LV = ['', 'かんたん', 'ふつう', 'ちょい難'];
+const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.5 8.2 3.4 4.5 7 4.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.6 0 5.5 3.7 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg>';
 const SPEC = Z.specimens.map((x, i) => ({ ...x, n: i + 1, id: String(i + 1).padStart(3, '0'), no: 'No.' + String(i + 1).padStart(3, '0') }));
 const saveMin = (x) => x.save.man * x.save.per;
 const fmtSave = (x) => { const m = saveMin(x); return m < 60 ? `約${Math.round(m)}分` : `約${Math.round(m / 60)}時間`; };
@@ -153,6 +154,7 @@ for (const x of SPEC) {
           <div><dt>難しさ</dt><dd>${lvDots(x.lv)} ${LV[x.lv]}</dd></div>
           <div><dt>動くきっかけ</dt><dd>${esc(f.trigger)}</dd></div>
         </dl>
+        <p class="sp-fav"><button class="btn small fav-btn" type="button" data-fav="${x.n}" data-fav-name="${esc(x.no + ' ' + x.t)}" aria-pressed="false" hidden>${HEART}<span class="fav-t">お気に入りに追加</span></button></p>
       </header>
       <div class="sp-body">
         ${f.html}
@@ -228,7 +230,7 @@ for (const [slug, , label] of FUROKU) {
 {
   const f = path.join(ROOT, 'index.html');
   const html = fs.readFileSync(f, 'utf8');
-  const cards = SPEC.map((x) => { const [hc, hi] = hab(x.s); return `<a class="label" href="no/${x.id}/" data-n="${x.n}" style="--hc:var(${hc})"><span class="label-top"><span class="label-no">${x.no}${x.adv ? '<span class="adv-tag">応用</span>' : ''}</span><span class="label-hab">${ic(hi)}${esc(x.s)}</span></span><h3>${esc(x.t)}</h3><span class="desc">${esc(x.d)}</span><span class="label-foot"><span class="label-save"><small>年間の削減</small><b>${fmtSave(x)}</b></span><span class="label-lv">${lvDots(x.lv)}${LV[x.lv]}</span></span></a>`; }).join('\n');
+  const cards = SPEC.map((x) => { const [hc, hi] = hab(x.s); return `<div class="label-wrap" style="--hc:var(${hc})"><a class="label" href="no/${x.id}/" data-n="${x.n}"><span class="label-top"><span class="label-no">${x.no}${x.adv ? '<span class="adv-tag">応用</span>' : ''}</span><span class="label-hab">${ic(hi)}${esc(x.s)}</span></span><h3>${esc(x.t)}</h3><span class="desc">${esc(x.d)}</span><span class="label-foot"><span class="label-save"><small>年間の削減</small><b>${fmtSave(x)}</b></span><span class="label-lv">${lvDots(x.lv)}${LV[x.lv]}</span></span></a><button class="fav" type="button" data-fav="${x.n}" aria-pressed="false" aria-label="お気に入り：${esc(x.no + ' ' + x.t)}">${HEART}</button></div>`; }).join('\n');
   const out = html.replace(/<!-- cards:start -->[\s\S]*?<!-- cards:end -->/, `<!-- cards:start -->\n${cards}\n<!-- cards:end -->`);
   if (out === html && !html.includes('<!-- cards:start -->')) throw new Error('index.html に cards の目印がありません');
   fs.writeFileSync(f, out);

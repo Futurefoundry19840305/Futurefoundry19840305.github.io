@@ -32,7 +32,7 @@ const TOPICS_DOC_ID = '1DeaOWncaTYEvBv7VfKNAX-Ui5LszjHD0BypQefftIvE';
 // アクセスログ（サイトから届く匿名の記録）
 const LOG_SHEET = 'アクセスログ';
 const LOG_HEADERS = ['日時', '訪問者ID', 'セッションID', 'イベント', '対象', '値', 'ページ', '端末', '画面幅'];
-const EVENTS = ['pageview', 'scroll', 'leave', 'filter', 'search', 'sort', 'spec_open', 'copy_code', 'scene', 'price_view', 'req_open', 'req_submit'];
+const EVENTS = ['pageview', 'scroll', 'leave', 'filter', 'search', 'sort', 'spec_open', 'copy_code', 'scene', 'price_view', 'req_open', 'req_submit', 'fav'];
 
 /** 最初に1回だけ実行：表の見た目を整え、テストメールを送る */
 function setup() {
@@ -357,6 +357,14 @@ function query_(from, to, unit) {
     E.filter((x) => x.e === name && x.t && (!test || test(x))).forEach((x) => { m[x.t] = (m[x.t] || 0) + 1; });
     return Object.keys(m).map((k) => [k, m[k]]).sort((a, b) => b[1] - a[1]).slice(0, n);
   };
+  // お気に入り：標本ごとに、最後に★を付けたままの訪問者の数（付けたり外したりをくり返しても1人と数える）
+  const favTop = (n) => {
+    const last = {};
+    E.filter((x) => x.e === 'fav' && x.t).sort((a, b) => a.ts - b.ts).forEach((x) => { last[x.t + '\u0000' + x.vid] = x.v === '1'; });
+    const m = {};
+    Object.keys(last).forEach((k) => { if (last[k]) { const t = k.split('\u0000')[0]; m[t] = (m[t] || 0) + 1; } });
+    return Object.keys(m).map((k) => [k, m[k]]).sort((a, b) => b[1] - a[1]).slice(0, n);
+  };
   const stay = {};
   E.filter((x) => x.e === 'leave').forEach((x) => { const s = Number(x.v) || 0; if (s <= 10800) stay[x.sid] = Math.max(stay[x.sid] || 0, s); });
   const stayVals = Object.keys(stay).map((k) => stay[k]);
@@ -429,7 +437,7 @@ function query_(from, to, unit) {
       avgStay: stayVals.length ? Math.round(stayVals.reduce((a, b) => a + b, 0) / stayVals.length) : 0,
       reqOpen: sessWith('req_open').size,
       funnel: [['サイトを訪れた', pvSessions.size], ['標本を開いた', sessWith('spec_open').size], ['依頼フォームを開いた', sessWith('req_open').size], ['依頼を送った', sessWith('req_submit', (x) => x.v === '1').size]],
-      specimens: top('spec_open', 10), searches: top('search', 10), noHit: top('search', 10, (x) => x.v === '0'),
+      specimens: top('spec_open', 10), favs: favTop(10), searches: top('search', 10), noHit: top('search', 10, (x) => x.v === '0'),
       scenes: top('scene', 6), reqFrom: top('req_open', 8), refs: top('pageview', 8), filters: top('filter', 10),
       devices: Object.keys(devices).map((k) => [k, devices[k]]).sort((a, b) => b[1] - a[1]),
       scroll: [25, 50, 75, 100].map((m) => [m + '%', Object.keys(scr).filter((k) => scr[k] >= m).length]),
@@ -522,6 +530,9 @@ function updateTopics() {
     '',
     '■ よく開かれた標本',
     list(A.specimens),
+    '',
+    '■ お気に入りにされた標本（★を付けている訪問者の数）',
+    list(A.favs || [], '人'),
     '',
     '■ 依頼で「参考にした標本」（直近90日）',
     list(refs, '件'),

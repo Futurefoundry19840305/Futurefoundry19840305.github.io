@@ -52,6 +52,21 @@
   document.querySelectorAll('button[data-ref]').forEach((b) => {
     b.addEventListener('click', () => { location.href = '../../?ref=' + encodeURIComponent(b.dataset.ref) + '#request'; });
   });
+  /* お気に入り（図鑑のトップと同じ保存場所。このブラウザの中だけ） */
+  const FAV_LS = 'rakugas-fav';
+  const readFavs = () => { try { const a = JSON.parse(localStorage.getItem(FAV_LS) || '[]'); return Array.isArray(a) ? a.filter((n) => Number.isInteger(n) && n >= 1 && n <= 999) : []; } catch (e) { return []; } };
+  document.querySelectorAll('[data-fav]').forEach((b) => {
+    const n = +b.dataset.fav, t = b.querySelector('.fav-t');
+    const paint = (on) => { b.setAttribute('aria-pressed', on); if (t) t.textContent = on ? 'お気に入りに追加済み' : 'お気に入りに追加'; };
+    paint(readFavs().includes(n)); b.hidden = false;
+    b.addEventListener('click', () => {
+      const set = new Set(readFavs()), on = !set.has(n);
+      if (on) set.add(n); else set.delete(n);
+      try { localStorage.setItem(FAV_LS, JSON.stringify([...set].sort((x, y) => x - y))); } catch (e) {}
+      paint(on); ev('fav', b.dataset.favName || '', on ? '1' : '0'); flush();
+    });
+  });
+
   // 依頼フォームを開いた記録は、移動先の図鑑のトップで「個別ページから」として残す
 
   /* 横にスクロールする表：キーボードでも動かせるようにする */

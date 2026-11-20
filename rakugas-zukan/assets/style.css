@@ -556,3 +556,34 @@ h1,h2,h3,.label h3,.fx-pick h3,.fx-pick h3{word-break:auto-phrase}
   .label-save{display:flex;align-items:baseline;gap:6px}
   .label-save b{font-size:17px}
 }
+
+/* ---------- お気に入り ---------- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.heart{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+[aria-pressed="true"]>.heart{fill:var(--fav);stroke:var(--fav)}
+:root{--fav:#d23b5b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fav:#ff7a95}}
+:root[data-theme="dark"]{--fav:#ff7a95}
+.label-wrap{position:relative;display:flex;min-width:0;transition:transform .12s}
+.label-wrap>.label{flex:1;min-width:0}
+.label-wrap:hover{transform:translate(-2px,-2px)}
+.label-wrap:hover>.label{box-shadow:4px 4px 0 var(--ink)}
+.label:hover{transform:none}
+.label-wrap .label-top{padding-right:34px}
+.fav{position:absolute;top:13px;right:8px;width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:var(--ink-2);cursor:pointer}
+.fav .heart{width:20px;height:20px}
+.fav:hover{color:var(--fav);background:var(--paper)}
+.fav[aria-pressed="true"]{color:var(--fav)}
+.hab-fav .heart{width:15px;height:15px}
+.hab-fav[aria-pressed="true"] .heart{stroke:currentColor}
+.fav-btn{display:inline-flex;align-items:center;gap:6px}
+.fav-btn[aria-pressed="true"]{border-color:var(--fav)}
+.plate-foot-l{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sp-fav{margin:4px 0 0}
+.fav-sugg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.fav-sugg-k{display:inline-flex;align-items:center;gap:4px;font-size:var(--t-xs);color:var(--ink-2)}
+.fav-sugg-k .heart{width:14px;height:14px;fill:var(--fav);stroke:var(--fav)}
+.chip-btn{font:inherit;font-size:13px;padding:6px 10px;border:1.5px solid var(--rule);border-radius:4px;background:var(--sheet);color:var(--ink);cursor:pointer;text-align:left}
+.chip-btn:hover{border-color:var(--ink)}
+@media (pointer:coarse){.fav{width:44px;height:44px;top:9px;right:4px}.chip-btn{min-height:44px}}
+@media (prefers-reduced-motion:reduce){.label-wrap{transition:none}.label-wrap:hover{transform:none}}

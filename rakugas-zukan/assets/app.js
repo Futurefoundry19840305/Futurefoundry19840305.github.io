@@ -152,10 +152,30 @@
   let cat = 'すべて', q = '', sort = 'no';
   const habBox = $('habitats');
   const ADV = '応用';   // 複数サービスの連携・AI・外部APIなど、一歩進んだ使い方
-  const inCat = (x, k) => k === 'すべて' || (k === ADV ? !!x.adv : x.s === k);
-  const cats = ['すべて', ...(SPEC.some((x) => x.adv) ? [ADV] : []), ...Object.keys(HAB).filter((k) => SPEC.some((x) => x.s === k))];
+  /* お気に入り：このブラウザの中だけに保存（標本の番号の配列） */
+  const FAVK = 'お気に入り', FAV_LS = 'rakugas-fav';
+  const HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.5 8.2 3.4 4.5 7 4.5c2.1 0 3.6 1.2 5 3 1.4-1.8 2.9-3 5-3 3.6 0 5.5 3.7 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg>';
+  const favs = new Set((() => { try { const a = JSON.parse(localStorage.getItem(FAV_LS) || '[]'); return Array.isArray(a) ? a.filter((n) => Number.isInteger(n) && n >= 1 && n <= SPEC.length) : []; } catch (e) { return []; } })());
+  const saveFavs = () => { try { localStorage.setItem(FAV_LS, JSON.stringify([...favs].sort((a, b) => a - b))); } catch (e) {} };
+  const favBtn = (x) => `<button class="fav" type="button" data-fav="${x.n}" aria-pressed="${favs.has(x.n)}" aria-label="お気に入り：${esc(x.no + ' ' + x.t)}">${HEART}</button>`;
+  function toggleFav(n) {
+    const x = SPEC[n - 1]; if (!x) return;
+    const on = !favs.has(n);
+    if (on) favs.add(n); else favs.delete(n);
+    saveFavs();
+    document.querySelectorAll(`[data-fav="${n}"]`).forEach((b) => { b.setAttribute('aria-pressed', on); const t = b.querySelector('.fav-t'); if (t) t.textContent = on ? 'お気に入りに追加済み' : 'お気に入りに追加'; });
+    const c = $('favCount'); if (c) c.textContent = favs.size;
+    const live = $('favLive'); if (live) live.textContent = on ? `${x.no} をお気に入りに追加しました（全${favs.size}件）` : `${x.no} をお気に入りから外しました`;
+    T.ev('fav', x.no + ' ' + x.t, on ? '1' : '0');
+    if (cat === FAVK && !on) renderList();
+  }
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-fav]'); if (b) { e.preventDefault(); e.stopPropagation(); toggleFav(+b.dataset.fav); } }, true);
+
+  const inCat = (x, k) => k === 'すべて' || (k === FAVK ? favs.has(x.n) : k === ADV ? !!x.adv : x.s === k);
+  const cats = ['すべて', FAVK, ...(SPEC.some((x) => x.adv) ? [ADV] : []), ...Object.keys(HAB).filter((k) => SPEC.some((x) => x.s === k))];
   habBox.innerHTML = cats.map((k) => {
     const n = SPEC.filter((x) => inCat(x, k)).length;
+    if (k === FAVK) return `<button class="hab hab-fav" type="button" aria-pressed="${k === cat}" data-cat="${esc(k)}">${HEART}${esc(k)}<span class="n" id="favCount">${n}</span></button>`;
     const dot = k === 'すべて' ? '' : k === ADV ? '<span class="dot adv-dot" aria-hidden="true">★</span>' : `<span class="dot" style="--hc:var(${hab(k).c})"></span>`;
     return `<button class="hab" type="button" aria-pressed="${k === cat}" data-cat="${esc(k)}">${dot}${esc(k)}<span class="n">${n}</span></button>`;
   }).join('');
@@ -181,13 +201,13 @@
     $('count').textContent = `${list.length}種の標本`;
     $('specimens').innerHTML = list.length ? list.map((x) => {
       const h = hab(x.s);
-      return `<a class="label" href="no/${String(x.n).padStart(3, '0')}/" data-n="${x.n}" style="--hc:var(${h.c})">
+      return `<div class="label-wrap" style="--hc:var(${h.c})"><a class="label" href="no/${String(x.n).padStart(3, '0')}/" data-n="${x.n}">
         <span class="label-top"><span class="label-no">${x.no}${x.adv ? '<span class="adv-tag">応用</span>' : ''}</span><span class="label-hab">${ic(h.i)}${esc(x.s)}</span></span>
         <h3>${esc(x.t)}</h3>
         <span class="desc">${esc(x.d)}</span>
         <span class="label-foot"><span class="label-save"><small>年間の削減</small><b>${fmtSave(x)}</b></span><span class="label-lv">${lvDots(x.lv)}${LV[x.lv]}</span></span>
-      </a>`;
-    }).join('') : `<div class="empty"><p>「${esc(q)}」に当てはまる標本は見つかりませんでした。</p><p class="muted">別の言葉で探すか、そのまま作成をご相談ください。</p><p><button class="btn small" type="button" data-open-req>作成を相談する</button></p></div>`;
+      </a>${favBtn(x)}</div>`;
+    }).join('') : cat === FAVK && !k ? `<div class="empty"><p>お気に入りの標本はまだありません。</p><p class="muted">標本のカードや詳細にある ${HEART} を押すと、ここにまとまります。お気に入りは、このブラウザの中だけに保存されます。</p></div>` : `<div class="empty"><p>「${esc(q)}」に当てはまる標本は見つかりませんでした。</p><p class="muted">別の言葉で探すか、そのまま作成をご相談ください。</p><p><button class="btn small" type="button" data-open-req>作成を相談する</button></p></div>`;
   }
   renderList();
 
@@ -221,7 +241,7 @@
         <div class="code-wrap"><pre translate="no" tabindex="0" aria-label="コード例"><code>${esc(x.code)}</code></pre><button class="copy" type="button" data-copy="${x.n}">コピー</button></div>
         <p class="cnote">${esc(cnote(x.code))}</p>
       </div>
-      <div class="plate-foot"><span class="plate-foot-l"><button class="btn" type="button" data-close>閉じる</button><a class="link" href="no/${String(x.n).padStart(3, '0')}/">この標本のページ</a></span><button class="btn primary" type="button" data-ref="${esc(x.no + ' ' + x.t)}">これに近いものを依頼する（${priceOf(x.lv)}）</button></div>`;
+      <div class="plate-foot"><span class="plate-foot-l"><button class="btn" type="button" data-close>閉じる</button><button class="btn fav-btn" type="button" data-fav="${x.n}" aria-pressed="${favs.has(x.n)}">${HEART}<span class="fav-t">${favs.has(x.n) ? 'お気に入りに追加済み' : 'お気に入りに追加'}</span></button><a class="link" href="no/${String(x.n).padStart(3, '0')}/">この標本のページ</a></span><button class="btn primary" type="button" data-ref="${esc(x.no + ' ' + x.t)}">これに近いものを依頼する（${priceOf(x.lv)}）</button></div>`;
     if (!plate.open) { try { plate.showModal(); } catch (e) { plate.setAttribute('open', ''); } }
     T.ev('spec_open', x.no + ' ' + x.t);
     if (!fromHash) history.replaceState(null, '', '#no-' + String(n).padStart(3, '0'));
@@ -328,10 +348,19 @@
     if (plate.open) plate.close();
     show(form); msg.hidden = true; openedAt = Date.now();
     if (ref != null) $('f-ref').value = ref;
+    // お気に入りの標本を「参考にした標本」の候補として出す
+    const fl = $('f-favs');
+    if (fl) {
+      const list = [...favs].sort((a, b) => a - b).slice(0, 8).map((n) => SPEC[n - 1]).filter(Boolean);
+      fl.hidden = !list.length;
+      fl.innerHTML = list.length ? `<span class="fav-sugg-k">${HEART}お気に入りから選ぶ</span>` + list.map((x) => `<button class="chip-btn" type="button" data-pick-ref="${esc(x.no + ' ' + x.t)}">${esc(x.no + ' ' + x.t)}</button>`).join('') : '';
+    }
     try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
     setTimeout(() => $('f-name').focus(), 30);
   }
   document.addEventListener('click', (e) => {
+    const pk = e.target.closest('[data-pick-ref]');
+    if (pk) { const f = $('f-ref'); f.value = f.value.trim() ? f.value.trim() + '、' + pk.dataset.pickRef : pk.dataset.pickRef; f.focus(); return; }
     const o = e.target.closest('[data-open-req]'); if (o) return openReq(null, o);
     const r = e.target.closest('[data-ref]'); if (r) return openReq(r.dataset.ref, r);
     const c = e.target.closest('[data-close]'); if (c) { const d = c.closest('dialog'); if (d) d.close(); }
