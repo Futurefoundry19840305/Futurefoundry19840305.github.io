@@ -495,4 +495,33 @@
   }
   drawMine();
   reqHash();
+
+  /* ---------- 使い方の動画：初めて来た人にだけ、画面の右下で1回再生する ---------- */
+  (function howto() {
+    const box = $('howto'), v = $('howtoVideo'), KEY = 'rakugas-howto-seen';
+    if (!box || !v) return;
+    let timer = null;
+    const close = () => { clearTimeout(timer); try { v.pause(); } catch (e) {} box.classList.remove('on'); setTimeout(() => { box.hidden = true; }, reduce ? 0 : 250); };
+    const open = (auto) => {
+      if (!v.src) { v.poster = 'assets/media/howto-poster.jpg'; v.src = 'assets/media/howto.mp4'; }
+      box.hidden = false; requestAnimationFrame(() => box.classList.add('on'));
+      v.controls = !auto || reduce;
+      if (auto && !reduce) { v.currentTime = 0; const pr = v.play(); if (pr && pr.catch) pr.catch(() => { v.controls = true; }); }
+      else if (!auto) { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); }
+    };
+    v.addEventListener('ended', () => { timer = setTimeout(close, 1500); });
+    $('howtoClose').addEventListener('click', close);
+    box.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    $('howtoOpen').addEventListener('click', () => open(false));
+    let seen = false;
+    try { seen = localStorage.getItem(KEY) === '1'; } catch (e) { seen = true; }
+    // 依頼フォームや標本へ直接来た人、ブラウザに保存できない環境では自動で出さない
+    if (seen || location.hash) return;
+    const start = () => setTimeout(() => {
+      if (document.querySelector('dialog[open]') || document.hidden) return;
+      try { localStorage.setItem(KEY, '1'); } catch (e) { return; }
+      open(true);
+    }, 2500);
+    if (document.readyState === 'complete') start(); else addEventListener('load', start, { once: true });
+  })();
 })();

@@ -122,7 +122,7 @@
       <div class="finder">
         <label class="search"><span class="sr">やりたいことで探す</span><span data-i="search"></span><input id="q" type="search" placeholder="やりたいことで探す（例：メール、PDF、毎日）" autocomplete="off"></label>
         <div class="habitats" id="habitats" role="group" aria-label="生息地で絞り込む"></div>
-        <div class="finder-row"><p class="count" id="count" aria-live="polite"></p><label class="sort"><span>並べ替え</span><select id="sort"><option value="no">番号順</option><option value="save">削減時間が大きい順</option></select></label></div>
+        <div class="finder-row"><p class="count" id="count" aria-live="polite"></p><button class="link vguide-open" type="button" id="howtoOpen">使い方の動画（15秒）</button><label class="sort"><span>並べ替え</span><select id="sort"><option value="no">番号順</option><option value="save">削減時間が大きい順</option></select></label></div>
       </div>
       <p class="caution"><span data-i="warn"></span><span>コードは見本です。シート名や「〜ID」を自分のものに書き換え、テスト用のデータで試してから使ってください。<button class="link" type="button" data-goto="cautions">使う前に知っておきたいこと</button></span></p>
       <p class="sr-only" id="favLive" aria-live="polite"></p>
@@ -294,6 +294,12 @@
   </section>
 
 </main>
+
+<aside class="vguide" id="howto" aria-labelledby="howtoTitle" hidden>
+  <div class="vguide-bar"><p id="howtoTitle">図鑑の使い方（15秒）</p><button class="close" type="button" id="howtoClose" aria-label="使い方の動画を閉じる">×</button></div>
+  <video id="howtoVideo" muted playsinline preload="none" width="720" height="480" aria-describedby="howtoText"></video>
+  <p class="sr-only" id="howtoText">言葉で探す、サービスで絞り込む、ハートでお気に入りに保存してお気に入りだけを表示する、標本を開いて流れ図・時間削減・コード例を見る、そのまま作成を依頼する、の順に操作を見せる音声なしの動画です。</p>
+</aside>
 
 <footer class="foot">
   <div class="wrap">
