@@ -163,11 +163,11 @@
     const on = !favs.has(n);
     if (on) favs.add(n); else favs.delete(n);
     saveFavs();
-    document.querySelectorAll(`[data-fav="${n}"]`).forEach((b) => { b.setAttribute('aria-pressed', on); const t = b.querySelector('.fav-t'); if (t) t.textContent = on ? 'お気に入りに追加済み' : 'お気に入りに追加'; });
-    const c = $('favCount'); if (c) c.textContent = favs.size;
+    document.querySelectorAll(`[data-fav="${n}"]`).forEach((b) => { b.setAttribute('aria-pressed', on); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); const t = b.querySelector('.fav-t'); if (t) t.textContent = on ? 'お気に入りに追加済み' : 'お気に入りに追加'; });
+    const c = $('favCount'); if (c) { c.textContent = favs.size; c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
     const live = $('favLive'); if (live) live.textContent = on ? `${x.no} をお気に入りに追加しました（全${favs.size}件）` : `${x.no} をお気に入りから外しました`;
     T.ev('fav', x.no + ' ' + x.t, on ? '1' : '0');
-    if (cat === FAVK && !on) renderList();
+    if (cat === FAVK && !on) renderListAnimated();
   }
   document.addEventListener('click', (e) => { const b = e.target.closest('[data-fav]'); if (b) { e.preventDefault(); e.stopPropagation(); toggleFav(+b.dataset.fav); } }, true);
 
@@ -183,17 +183,22 @@
     const b = e.target.closest('.hab'); if (!b) return;
     cat = b.dataset.cat; T.ev('filter', cat);
     habBox.querySelectorAll('.hab').forEach((x) => x.setAttribute('aria-pressed', x === b));
-    renderList();
+    renderListAnimated();
   });
   let searchTimer = null;
   $('q').addEventListener('input', (e) => {
-    q = e.target.value; renderList();
+    q = e.target.value; renderListAnimated();
     clearTimeout(searchTimer);
     const word = q.trim();
     if (word) searchTimer = setTimeout(() => T.ev('search', word, $('specimens').querySelectorAll('.label').length), 1500);
   });
-  $('sort').addEventListener('change', (e) => { sort = e.target.value; renderList(); T.ev('sort', sort === 'save' ? '削減時間順' : '番号順'); });
+  $('sort').addEventListener('change', (e) => { sort = e.target.value; renderListAnimated(); T.ev('sort', sort === 'save' ? '削減時間順' : '番号順'); });
 
+  /* 絞り込み・並び替え・検索のとき、カードを新しい位置へ動かす（View Transitions に対応したブラウザのみ） */
+  function renderListAnimated() {
+    if (reduce || !document.startViewTransition || document.hidden) return renderList();
+    try { document.startViewTransition(renderList); } catch (e) { renderList(); }
+  }
   function renderList() {
     const k = q.trim().toLowerCase();
     const list = SPEC.filter((x) => inCat(x, cat) && (!k || (x.t + x.d + x.use + x.s + (x.adv ? ADV : '')).toLowerCase().includes(k)));
@@ -201,7 +206,7 @@
     $('count').textContent = `${list.length}種の標本`;
     $('specimens').innerHTML = list.length ? list.map((x) => {
       const h = hab(x.s);
-      return `<div class="label-wrap" style="--hc:var(${h.c})"><a class="label" href="no/${String(x.n).padStart(3, '0')}/" data-n="${x.n}">
+      return `<div class="label-wrap" style="--hc:var(${h.c});view-transition-name:sp-${x.n}"><a class="label" href="no/${String(x.n).padStart(3, '0')}/" data-n="${x.n}">
         <span class="label-top"><span class="label-no">${x.no}${x.adv ? '<span class="adv-tag">応用</span>' : ''}</span><span class="label-hab">${ic(h.i)}${esc(x.s)}</span></span>
         <h3>${esc(x.t)}</h3>
         <span class="desc">${esc(x.d)}</span>

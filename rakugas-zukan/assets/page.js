@@ -63,6 +63,7 @@
       const set = new Set(readFavs()), on = !set.has(n);
       if (on) set.add(n); else set.delete(n);
       try { localStorage.setItem(FAV_LS, JSON.stringify([...set].sort((x, y) => x - y))); } catch (e) {}
+      b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
       paint(on); ev('fav', b.dataset.favName || '', on ? '1' : '0'); flush();
     });
   });
